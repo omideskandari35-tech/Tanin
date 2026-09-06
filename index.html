@@ -1744,27 +1744,50 @@ function updateTunerNeedle(cents){
   else needle.classList.add('off');
 }
 
+let tunerUsesByteFallback = false;
+let tunerByteBuffer = null;
+
 function tunerLoop(){
   if(!tunerRunning) return;
-  tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
-  const freq = autoCorrelatePitch(tunerBuffer, audioCtx.sampleRate);
 
-  if(freq > 0){
-    const info = freqToNoteInfo(freq);
-    document.getElementById('tunerNote').textContent = info.name;
-    document.getElementById('tunerFreq').textContent = freq.toFixed(1) + ' Hz  —  ' +
-      (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت';
-    document.getElementById('tunerStatus').textContent = 'در حال شنیدن…';
-    updateTunerNeedle(info.cents);
-  } else {
-    document.getElementById('tunerNote').textContent = '–';
-    document.getElementById('tunerFreq').textContent = '\u00A0';
-    document.getElementById('tunerStatus').textContent = 'در حال شنیدن… (بخون تا نت رو نشون بدم)';
-    const needle = document.getElementById('tunerNeedle');
-    needle.style.left = '50%';
-    needle.style.right = 'auto';
-    needle.style.transform = 'translateX(-50%)';
-    needle.classList.remove('in-tune', 'close', 'off');
+  try {
+    if(tunerUsesByteFallback){
+      tunerAnalyser.getByteTimeDomainData(tunerByteBuffer);
+      for(let i = 0; i < tunerByteBuffer.length; i++){
+        tunerBuffer[i] = (tunerByteBuffer[i] - 128) / 128;
+      }
+    } else {
+      tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
+    }
+
+    const freq = autoCorrelatePitch(tunerBuffer, audioCtx.sampleRate);
+
+    if(freq > 0){
+      const info = freqToNoteInfo(freq);
+      document.getElementById('tunerNote').textContent = info.name;
+      document.getElementById('tunerFreq').textContent = freq.toFixed(1) + ' Hz  —  ' +
+        (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت';
+      document.getElementById('tunerStatus').textContent = 'در حال شنیدن…';
+      updateTunerNeedle(info.cents);
+    } else {
+      document.getElementById('tunerNote').textContent = '–';
+      document.getElementById('tunerFreq').textContent = '\u00A0';
+      document.getElementById('tunerStatus').textContent = 'در حال شنیدن… (بخون تا نت رو نشون بدم)';
+      const needle = document.getElementById('tunerNeedle');
+      needle.style.left = '50%';
+      needle.style.right = 'auto';
+      needle.style.transform = 'translateX(-50%)';
+      needle.classList.remove('in-tune', 'close', 'off');
+    }
+  } catch(e){
+    console.error('Tuner loop error', e);
+    if(!tunerUsesByteFallback && typeof tunerAnalyser.getFloatTimeDomainData !== 'function'){
+      // this browser doesn't support getFloatTimeDomainData at all — switch to the byte fallback and keep going
+      tunerUsesByteFallback = true;
+      tunerByteBuffer = new Uint8Array(tunerAnalyser.fftSize);
+    } else {
+      document.getElementById('tunerStatus').textContent = 'خطای موقت در تشخیص صدا، در حال تلاش دوباره…';
+    }
   }
 
   tunerRafId = requestAnimationFrame(tunerLoop);
@@ -1808,6 +1831,8 @@ async function startTuner(){
   tunerAnalyser = audioCtx.createAnalyser();
   tunerAnalyser.fftSize = 2048;
   tunerBuffer = new Float32Array(tunerAnalyser.fftSize);
+  tunerUsesByteFallback = false;
+  tunerByteBuffer = null;
   source.connect(tunerAnalyser);
 
   tunerRunning = true;
