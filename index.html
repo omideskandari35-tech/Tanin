@@ -180,7 +180,7 @@
     font-size:13px;
     min-width:100px;
   }
-  #intervalCard.disabled, #scaleCard.disabled, #playCard.disabled, #notePlayerCard.disabled, #recogCard.disabled, #gravityCard.disabled, #tunerCard.disabled{
+  #intervalCard.disabled, #scaleCard.disabled, #playCard.disabled, #notePlayerCard.disabled, #recogCard.disabled, #gravityCard.disabled, #tunerCard.disabled, #echoNoteCard.disabled, #echoSeqCard.disabled{
     opacity:0;
     pointer-events:none;
     max-height:0;
@@ -518,6 +518,55 @@
     margin-bottom:22px;
     min-height:18px;
   }
+
+  .echo-listen-wrap{
+    text-align:center;
+    margin:6px 0 20px;
+  }
+  .echo-listen-indicator{
+    font-size:15px;
+    font-weight:700;
+    color:var(--brass-dark);
+    margin-bottom:10px;
+    animation:breathe 1.6s ease-in-out infinite;
+  }
+  .echo-results{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:16px;
+    max-width:360px;
+    margin-inline:auto;
+  }
+  .echo-result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background:var(--card);
+    font-size:13.5px;
+  }
+  .echo-result-row.correct{
+    background:var(--up-soft);
+    border-color:var(--up-line);
+    color:var(--up);
+  }
+  .echo-result-row.close{
+    background:#fbf1da;
+    border-color:#e6cf9a;
+    color:var(--brass-dark);
+  }
+  .echo-result-row.wrong{
+    background:var(--down-soft);
+    border-color:var(--down-line);
+    color:var(--down);
+  }
+  .echo-result-row b{
+    font-family:'Fraunces','Vazirmatn',serif;
+    font-size:15px;
+  }
   .tuner-note{
     font-family:'Fraunces','Vazirmatn',serif;
     font-size:58px;
@@ -572,6 +621,58 @@
     justify-content:space-between;
     max-width:320px;
     margin:0 auto;
+  }
+
+  .echo-panel{
+    text-align:center;
+    margin:6px auto 20px;
+  }
+  .echo-targets{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  .echo-target-pill{
+    min-width:46px;
+    height:46px;
+    padding:0 10px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    background:var(--card);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fraunces','Vazirmatn',serif;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink-faint);
+    transition:all .2s var(--ease);
+  }
+  .echo-target-pill.current{
+    border-color:var(--brass);
+    color:var(--brass-dark);
+    box-shadow:0 0 0 4px var(--brass-light) inset, 0 0 0 1px var(--brass);
+    animation:breathe 1.6s ease-in-out infinite;
+  }
+  .echo-target-pill.matched{
+    border-color:var(--up);
+    background:var(--up-soft);
+    color:var(--up);
+  }
+  .echo-live{
+    font-family:'Fraunces','Vazirmatn',serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--ink);
+    min-height:30px;
+  }
+  .echo-status{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    min-height:18px;
   }
 
   .feedback{
@@ -705,6 +806,8 @@
       <button class="pill mode-pill" data-mode="recog">تشخیص</button>
       <button class="pill mode-pill" data-mode="gravity">جاذبه</button>
       <button class="pill mode-pill" data-mode="tuner">تیونر</button>
+      <button class="pill mode-pill" data-mode="echoNote">تکرار نت</button>
+      <button class="pill mode-pill" data-mode="echoSeq">تکرار ملودی</button>
     </div>
   </div>
 
@@ -952,9 +1055,58 @@
     </div>
   </div>
 
+  <div class="card disabled" id="echoNoteCard">
+    <p class="hint" style="margin-bottom:14px;">یه نت تصادفی از بازه‌ی زیر پخش می‌شه. بعدش میکروفون روشن می‌شه — همون نت رو بخون یا با سازت بزن تا تشخیص بده درست خوندی یا نه.</p>
+    <p class="settings-title">از اکتاو</p>
+    <div class="pill-row" id="echoNoteOctaveMinGroup">
+      <button class="pill active" data-val="2">۲</button>
+      <button class="pill" data-val="3">۳</button>
+      <button class="pill" data-val="4">۴</button>
+    </div>
+    <p class="sub-title">تا اکتاو</p>
+    <div class="pill-row" id="echoNoteOctaveMaxGroup">
+      <button class="pill" data-val="2">۲</button>
+      <button class="pill" data-val="3">۳</button>
+      <button class="pill active" data-val="4">۴</button>
+    </div>
+  </div>
+
+  <div class="card disabled" id="echoSeqCard">
+    <p class="hint" style="margin-bottom:14px;">چند نت پشت‌سرهم از یه گام پخش می‌شه. بعدش میکروفون روشن می‌شه — همون توالی رو به‌ترتیب بخون.</p>
+    <p class="settings-title">نوع گام</p>
+    <div class="pill-group" id="echoSeqScaleTypeGroup">
+      <button class="pill active" data-val="major">ماژور</button>
+      <button class="pill" data-val="minor">مینور طبیعی</button>
+      <button class="pill" data-val="melodicMinor">مینور ملودیک</button>
+      <button class="pill" data-val="harmonicMinor">مینور هارمونیک</button>
+      <button class="pill" data-val="phrygian">فریژین</button>
+      <button class="pill" data-val="hijaz">حجاز</button>
+    </div>
+    <p class="sub-title">اکتاو</p>
+    <div class="octave-row" id="echoSeqOctaveGroup">
+      <button class="pill" data-val="2">اکتاو ۲</button>
+      <button class="pill active" data-val="3">اکتاو ۳</button>
+      <button class="pill" data-val="4">اکتاو ۴</button>
+    </div>
+    <p class="sub-title">تعداد نوت</p>
+    <div class="pill-group" id="echoSeqCountGroup">
+      <button class="pill" data-val="3">۳</button>
+      <button class="pill active" data-val="4">۴</button>
+      <button class="pill" data-val="5">۵</button>
+      <button class="pill" data-val="6">۶</button>
+      <button class="pill" data-val="7">۷</button>
+    </div>
+  </div>
+
   <div class="card stage" id="stageCard">
     <div class="stage-label" id="stageLabel">در حال بارگذاری صدای پیانو…</div>
     <button class="play-btn" id="playBtn" aria-label="پخش" disabled>▶</button>
+
+    <div class="echo-panel" id="echoPanel" style="display:none;">
+      <div class="echo-targets" id="echoTargetsRow"></div>
+      <div class="echo-live" id="echoLiveInfo">—</div>
+      <div class="echo-status" id="echoStatusText">برای شروع دکمه‌ی پخش رو بزن</div>
+    </div>
 
     <div class="perf-kb-wrap" id="perfKbWrap" style="display:none;">
       <div class="note-key-grid perf" id="perfKeyboard">
@@ -971,6 +1123,12 @@
         <button class="note-key sharp" data-pc="10" style="left:81.1%;" disabled></button>
         <button class="note-key" data-pc="11" disabled>B</button>
       </div>
+    </div>
+
+    <div class="echo-listen-wrap" id="echoListenWrap" style="display:none;">
+      <div class="echo-listen-indicator" id="echoListenIndicator">🎙️ در حال گوش دادن به صدات…</div>
+      <button class="reset" id="echoStopBtn" type="button">همین الان تموم کن</button>
+      <div class="echo-results" id="echoResults"></div>
     </div>
 
     <div class="choices" id="choicesWrap">
@@ -1726,7 +1884,11 @@ function freqToNoteInfo(freq){
   const cents = (midi - nearestMidi) * 100;
   const idx = ((nearestMidi % 12) + 12) % 12;
   const octave = Math.floor(nearestMidi / 12) - 1;
-  return { name: NOTE_NAMES[idx] + octave, cents };
+  return { name: NOTE_NAMES[idx] + octave, cents, offsetFromC4: nearestMidi - 60 };
+}
+
+function offsetToFreq(offset){
+  return 261.63 * Math.pow(2, offset / 12);
 }
 
 function updateTunerNeedle(cents){
@@ -1857,6 +2019,220 @@ function stopTuner(){
   needle.style.right = 'auto';
   needle.style.transform = 'translateX(-50%)';
   needle.classList.remove('in-tune', 'close', 'off');
+}
+
+// ---------- Echo engine: listens via mic and matches sung pitch against a target sequence ----------
+// Shared by "تکرار نت" (single note) and "تکرار توالی" (sequence of notes).
+let echoStream = null, echoAnalyser = null, echoBuffer = null, echoRafId = null, echoRunning = false;
+let echoUsesByteFallback = false, echoByteBuffer = null;
+let echoTargets = [];       // array of semitone offsets from C4, in order
+let echoIndex = 0;          // which target we're currently trying to match
+let echoMatchStartTime = null;
+const ECHO_MATCH_CENTS_TOLERANCE = 40;
+const ECHO_MATCH_HOLD_SECONDS = 0.35;
+
+function renderEchoTargets(){
+  const row = document.getElementById('echoTargetsRow');
+  row.innerHTML = '';
+  echoTargets.forEach((offset, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'echo-target-pill';
+    if(i < echoIndex) { pill.classList.add('matched'); pill.textContent = noteNameFromSemitone(offset); }
+    else if(i === echoIndex) { pill.classList.add('current'); pill.textContent = '؟'; }
+    else { pill.textContent = '؟'; }
+    row.appendChild(pill);
+  });
+}
+
+async function startEchoListening(targets, onAllMatched){
+  echoTargets = targets;
+  echoIndex = 0;
+  echoMatchStartTime = null;
+  document.getElementById('echoPanel').style.display = 'block';
+  renderEchoTargets();
+  document.getElementById('echoLiveInfo').textContent = '—';
+  document.getElementById('echoStatusText').textContent = 'در حال درخواست دسترسی میکروفون…';
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    document.getElementById('echoStatusText').textContent =
+      'این مرورگر از دسترسی به میکروفون پشتیبانی نمی‌کنه یا صفحه امن (HTTPS/localhost) نیست.';
+    return;
+  }
+
+  try {
+    echoStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+  } catch(e){
+    console.error('Echo mic access failed', e);
+    let msg;
+    if(!window.isSecureContext){
+      msg = 'میکروفون فقط توی صفحات امن (https:// یا localhost) کار می‌کنه.';
+    } else if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError'){
+      msg = 'دسترسی میکروفون رد شد. توی تنظیمات اجازه بده و دوباره امتحان کن.';
+    } else if(e.name === 'NotFoundError'){
+      msg = 'میکروفونی روی این دستگاه پیدا نشد.';
+    } else {
+      msg = 'دسترسی به میکروفون ممکن نشد (' + e.name + ').';
+    }
+    document.getElementById('echoStatusText').textContent = msg;
+    return;
+  }
+
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state !== 'running'){
+    await audioCtx.resume();
+  }
+
+  const source = audioCtx.createMediaStreamSource(echoStream);
+  echoAnalyser = audioCtx.createAnalyser();
+  echoAnalyser.fftSize = 2048;
+  echoBuffer = new Float32Array(echoAnalyser.fftSize);
+  echoUsesByteFallback = false;
+  echoByteBuffer = null;
+  source.connect(echoAnalyser);
+
+  echoRunning = true;
+  document.getElementById('echoStatusText').textContent = 'الان بخون…';
+  echoLoop(onAllMatched);
+}
+
+function stopEchoListening(){
+  echoRunning = false;
+  if(echoRafId) cancelAnimationFrame(echoRafId);
+  if(echoStream){
+    echoStream.getTracks().forEach(t => t.stop());
+    echoStream = null;
+  }
+}
+
+function echoLoop(onAllMatched){
+  if(!echoRunning) return;
+
+  try {
+    if(echoUsesByteFallback){
+      echoAnalyser.getByteTimeDomainData(echoByteBuffer);
+      for(let i = 0; i < echoByteBuffer.length; i++){
+        echoBuffer[i] = (echoByteBuffer[i] - 128) / 128;
+      }
+    } else {
+      echoAnalyser.getFloatTimeDomainData(echoBuffer);
+    }
+
+    const freq = autoCorrelatePitch(echoBuffer, audioCtx.sampleRate);
+    const liveEl = document.getElementById('echoLiveInfo');
+    const statusEl = document.getElementById('echoStatusText');
+
+    if(freq > 0 && echoIndex < echoTargets.length){
+      const info = freqToNoteInfo(freq);
+      liveEl.textContent = info.name + '  (' + (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت)';
+
+      const targetFreq = offsetToFreq(echoTargets[echoIndex]);
+      const centsDiff = 1200 * Math.log2(freq / targetFreq);
+
+      if(Math.abs(centsDiff) <= ECHO_MATCH_CENTS_TOLERANCE){
+        if(echoMatchStartTime === null) echoMatchStartTime = audioCtx.currentTime;
+        const held = audioCtx.currentTime - echoMatchStartTime;
+        statusEl.textContent = 'همینه! نگهش دار… (' + Math.min(1, held / ECHO_MATCH_HOLD_SECONDS).toFixed(0) + ')';
+        if(held >= ECHO_MATCH_HOLD_SECONDS){
+          echoIndex++;
+          echoMatchStartTime = null;
+          renderEchoTargets();
+          if(echoIndex >= echoTargets.length){
+            statusEl.textContent = '🎉 عالی بود! همه رو درست خوندی.';
+            stopEchoListening();
+            if(onAllMatched) onAllMatched();
+            return;
+          } else {
+            statusEl.textContent = 'درسته! حالا نت بعدی رو بخون.';
+          }
+        }
+      } else {
+        echoMatchStartTime = null;
+        statusEl.textContent = 'الان بخون…';
+      }
+    } else {
+      document.getElementById('echoLiveInfo').textContent = '—';
+    }
+  } catch(e){
+    console.error('Echo loop error', e);
+    if(!echoUsesByteFallback && typeof echoAnalyser.getFloatTimeDomainData !== 'function'){
+      echoUsesByteFallback = true;
+      echoByteBuffer = new Uint8Array(echoAnalyser.fftSize);
+    }
+  }
+
+  echoRafId = requestAnimationFrame(() => echoLoop(onAllMatched));
+}
+
+// ---------- تکرار نت: play one random note in a chosen octave range, then listen ----------
+async function playEchoNoteRound(){
+  await ensureAudio();
+  if(!samplerReady) return;
+
+  stopEchoListening();
+  document.getElementById('echoPanel').style.display = 'none';
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('stageLabel').textContent = 'در حال پخش…';
+
+  const octMin = parseInt(document.querySelector('#echoNoteOctaveMinGroup .pill.active').dataset.val, 10);
+  const octMax = parseInt(document.querySelector('#echoNoteOctaveMaxGroup .pill.active').dataset.val, 10);
+  const lo = Math.min(octMin, octMax), hi = Math.max(octMin, octMax);
+
+  const octave = lo + Math.floor(Math.random() * (hi - lo + 1));
+  const pc = Math.floor(Math.random() * 12);
+  const offset = pc + (octave - 4) * 12;
+
+  playOffset(offset, 0.1, 1.0);
+  highlightPerfKey(offset, 0.1, 1.0);
+
+  setTimeout(() => {
+    document.getElementById('playBtn').disabled = false;
+    document.getElementById('stageLabel').textContent = 'حالا همین نت رو بخون';
+    startEchoListening([offset], () => {
+      document.getElementById('stageLabel').textContent = 'برای یه نت جدید دوباره دکمه‌ی پخش رو بزن';
+    });
+  }, 1300);
+}
+
+// ---------- تکرار توالی: play N notes from a scale, then listen for all N in order ----------
+async function playEchoSeqRound(){
+  await ensureAudio();
+  if(!samplerReady) return;
+
+  stopEchoListening();
+  document.getElementById('echoPanel').style.display = 'none';
+  document.getElementById('playBtn').disabled = true;
+  document.getElementById('stageLabel').textContent = 'در حال پخش…';
+
+  const scaleType = document.querySelector('#echoSeqScaleTypeGroup .pill.active').dataset.val;
+  const octave = parseInt(document.querySelector('#echoSeqOctaveGroup .pill.active').dataset.val, 10);
+  const count = parseInt(document.querySelector('#echoSeqCountGroup .pill.active').dataset.val, 10);
+
+  const degrees = SCALE_PATTERNS[scaleType].slice(0, 7);
+  const rootOffset = (octave - 4) * 12;
+  const targets = [];
+  for(let i = 0; i < count; i++){
+    targets.push(degrees[Math.floor(Math.random() * degrees.length)] + rootOffset);
+  }
+
+  const dur = 0.5, gap = 0.12;
+  let t = 0.1;
+  targets.forEach(offset => {
+    playOffset(offset, t, dur);
+    highlightPerfKey(offset, t, dur);
+    t += dur + gap;
+  });
+
+  setTimeout(() => {
+    document.getElementById('playBtn').disabled = false;
+    document.getElementById('stageLabel').textContent = 'حالا همین توالی رو به‌ترتیب بخون';
+    startEchoListening(targets, () => {
+      document.getElementById('stageLabel').textContent = 'برای یه توالی جدید دوباره دکمه‌ی پخش رو بزن';
+    });
+  }, t * 1000 + 150);
 }
 
 // ---------- Recognition mode (تشخیص): plays a reference scale/tetrachord,
@@ -2431,6 +2807,14 @@ document.getElementById('playBtn').addEventListener('click', () => {
     playGravityPerformance();
     return;
   }
+  if(currentMode === 'echoNote'){
+    playEchoNoteRound();
+    return;
+  }
+  if(currentMode === 'echoSeq'){
+    playEchoSeqRound();
+    return;
+  }
   if(currentMode === 'recog'){
     if(!answered && recogAnswerValue !== null){
       replayRecog();
@@ -2517,7 +2901,7 @@ document.querySelectorAll('#scaleLengthGroup .pill').forEach(pill => {
   });
 });
 
-['playScaleTypeGroup', 'playDirGroup', 'playOctaveGroup', 'playOctaveCountGroup', 'playIncludeTopGroup', 'playSpeedGroup', 'noteOctaveGroup', 'noteDurationGroup', 'recogSubModeGroup', 'recogLengthGroup', 'recogScaleTypeGroup', 'recogOctaveGroup', 'recogSpeedGroup', 'gravityScaleTypeGroup', 'gravityOctaveGroup', 'gravityDirGroup', 'gravitySpeedGroup'].forEach(groupId => {
+['playScaleTypeGroup', 'playDirGroup', 'playOctaveGroup', 'playOctaveCountGroup', 'playIncludeTopGroup', 'playSpeedGroup', 'noteOctaveGroup', 'noteDurationGroup', 'recogSubModeGroup', 'recogLengthGroup', 'recogScaleTypeGroup', 'recogOctaveGroup', 'recogSpeedGroup', 'gravityScaleTypeGroup', 'gravityOctaveGroup', 'gravityDirGroup', 'gravitySpeedGroup', 'echoNoteOctaveMinGroup', 'echoNoteOctaveMaxGroup', 'echoSeqScaleTypeGroup', 'echoSeqOctaveGroup', 'echoSeqCountGroup'].forEach(groupId => {
   document.querySelectorAll('#' + groupId + ' .pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('#' + groupId + ' .pill').forEach(p => p.classList.remove('active'));
@@ -2577,6 +2961,11 @@ document.getElementById('gravityRepeatPlus').addEventListener('click', () => {
   el.textContent = v;
 });
 
+document.getElementById('echoStopBtn').addEventListener('click', () => {
+  stopEchoListening();
+  document.getElementById('echoStatusText').textContent = 'متوقف شد. برای شروع دوباره دکمه‌ی پخش رو بزن.';
+});
+
 document.querySelectorAll('#modeGroup .pill').forEach(pill => {
   pill.addEventListener('click', () => {
     document.querySelectorAll('#modeGroup .pill').forEach(p => p.classList.remove('active'));
@@ -2590,6 +2979,10 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     const recogCard = document.getElementById('recogCard');
     const gravityCard = document.getElementById('gravityCard');
     const tunerCard = document.getElementById('tunerCard');
+    const echoNoteCard = document.getElementById('echoNoteCard');
+    const echoSeqCard = document.getElementById('echoSeqCard');
+    const echoPanel = document.getElementById('echoPanel');
+    const echoListenWrap = document.getElementById('echoListenWrap');
     const stageCard = document.getElementById('stageCard');
     const mainTitle = document.getElementById('mainTitle');
     const introText = document.getElementById('introText');
@@ -2609,6 +3002,10 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     recogCard.classList.add('disabled');
     gravityCard.classList.add('disabled');
     tunerCard.classList.add('disabled');
+    echoNoteCard.classList.add('disabled');
+    echoSeqCard.classList.add('disabled');
+    echoPanel.style.display = 'none';
+    echoListenWrap.style.display = 'none';
     stageCard.style.display = 'block';
     choicesWrap.style.display = 'none';
     scaleChoicesWrap.style.display = 'none';
@@ -2616,6 +3013,11 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     recogChoicesWrap.innerHTML = '';
     recogAnswerValue = null;
     recogFullTimeline = [];
+
+    // leaving the echo modes should always release the microphone
+    if(currentMode !== 'echoNote' && currentMode !== 'echoSeq'){
+      stopEchoListening();
+    }
 
     // leaving the tuner mode should always release the microphone
     if(currentMode !== 'tuner' && tunerRunning){
@@ -2683,6 +3085,16 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
       stageCard.style.display = 'none';
       mainTitle.textContent = 'تیونر';
       introText.textContent = 'بخون تا مرورگر با میکروفون نت و فرکانس صدات رو لحظه‌به‌لحظه نشون بده — دقیقاً مثل یه تیونر واقعی.';
+    } else if(currentMode === 'echoNote'){
+      echoNoteCard.classList.remove('disabled');
+      mainTitle.textContent = 'تکرار نت';
+      introText.textContent = 'یه نت پخش می‌شه، تو با صدات یا سازت همون نت رو تکرار کن. بعد از پخش، میکروفون خودکار روشن می‌شه.';
+      showPerfKeyboard(true);
+    } else if(currentMode === 'echoSeq'){
+      echoSeqCard.classList.remove('disabled');
+      mainTitle.textContent = 'تکرار ملودی';
+      introText.textContent = 'چند نت پشت‌سرهم از یه گام پخش می‌شه، تو با صدات یکی‌یکی تکرارشون کن.';
+      showPerfKeyboard(true);
     }
 
     currentDirection = null;
