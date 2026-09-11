@@ -180,7 +180,7 @@
     font-size:13px;
     min-width:100px;
   }
-  #intervalCard.disabled, #scaleCard.disabled, #playCard.disabled, #notePlayerCard.disabled, #recogCard.disabled, #gravityCard.disabled, #tunerCard.disabled, #echoNoteCard.disabled, #echoSeqCard.disabled{
+  #intervalCard.disabled, #scaleCard.disabled, #playCard.disabled, #notePlayerCard.disabled, #recogCard.disabled, #gravityCard.disabled, #tunerCard.disabled{
     opacity:0;
     pointer-events:none;
     max-height:0;
@@ -518,55 +518,6 @@
     margin-bottom:22px;
     min-height:18px;
   }
-
-  .echo-listen-wrap{
-    text-align:center;
-    margin:6px 0 20px;
-  }
-  .echo-listen-indicator{
-    font-size:15px;
-    font-weight:700;
-    color:var(--brass-dark);
-    margin-bottom:10px;
-    animation:breathe 1.6s ease-in-out infinite;
-  }
-  .echo-results{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    margin-top:16px;
-    max-width:360px;
-    margin-inline:auto;
-  }
-  .echo-result-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px 14px;
-    border-radius:12px;
-    border:1.5px solid var(--line);
-    background:var(--card);
-    font-size:13.5px;
-  }
-  .echo-result-row.correct{
-    background:var(--up-soft);
-    border-color:var(--up-line);
-    color:var(--up);
-  }
-  .echo-result-row.close{
-    background:#fbf1da;
-    border-color:#e6cf9a;
-    color:var(--brass-dark);
-  }
-  .echo-result-row.wrong{
-    background:var(--down-soft);
-    border-color:var(--down-line);
-    color:var(--down);
-  }
-  .echo-result-row b{
-    font-family:'Fraunces','Vazirmatn',serif;
-    font-size:15px;
-  }
   .tuner-note{
     font-family:'Fraunces','Vazirmatn',serif;
     font-size:58px;
@@ -621,58 +572,6 @@
     justify-content:space-between;
     max-width:320px;
     margin:0 auto;
-  }
-
-  .echo-panel{
-    text-align:center;
-    margin:6px auto 20px;
-  }
-  .echo-targets{
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    justify-content:center;
-    margin-bottom:14px;
-  }
-  .echo-target-pill{
-    min-width:46px;
-    height:46px;
-    padding:0 10px;
-    border-radius:50%;
-    border:2px solid var(--line);
-    background:var(--card);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'Fraunces','Vazirmatn',serif;
-    font-size:15px;
-    font-weight:700;
-    color:var(--ink-faint);
-    transition:all .2s var(--ease);
-  }
-  .echo-target-pill.current{
-    border-color:var(--brass);
-    color:var(--brass-dark);
-    box-shadow:0 0 0 4px var(--brass-light) inset, 0 0 0 1px var(--brass);
-    animation:breathe 1.6s ease-in-out infinite;
-  }
-  .echo-target-pill.matched{
-    border-color:var(--up);
-    background:var(--up-soft);
-    color:var(--up);
-  }
-  .echo-live{
-    font-family:'Fraunces','Vazirmatn',serif;
-    font-size:22px;
-    font-weight:700;
-    color:var(--ink);
-    min-height:30px;
-  }
-  .echo-status{
-    font-size:13px;
-    color:var(--ink-soft);
-    margin-top:6px;
-    min-height:18px;
   }
 
   .feedback{
@@ -806,8 +705,6 @@
       <button class="pill mode-pill" data-mode="recog">تشخیص</button>
       <button class="pill mode-pill" data-mode="gravity">جاذبه</button>
       <button class="pill mode-pill" data-mode="tuner">تیونر</button>
-      <button class="pill mode-pill" data-mode="echoNote">تکرار نت</button>
-      <button class="pill mode-pill" data-mode="echoSeq">تکرار ملودی</button>
     </div>
   </div>
 
@@ -1055,58 +952,9 @@
     </div>
   </div>
 
-  <div class="card disabled" id="echoNoteCard">
-    <p class="hint" style="margin-bottom:14px;">یه نت تصادفی از بازه‌ی زیر پخش می‌شه. بعدش میکروفون روشن می‌شه — همون نت رو بخون یا با سازت بزن تا تشخیص بده درست خوندی یا نه.</p>
-    <p class="settings-title">از اکتاو</p>
-    <div class="pill-row" id="echoNoteOctaveMinGroup">
-      <button class="pill active" data-val="2">۲</button>
-      <button class="pill" data-val="3">۳</button>
-      <button class="pill" data-val="4">۴</button>
-    </div>
-    <p class="sub-title">تا اکتاو</p>
-    <div class="pill-row" id="echoNoteOctaveMaxGroup">
-      <button class="pill" data-val="2">۲</button>
-      <button class="pill" data-val="3">۳</button>
-      <button class="pill active" data-val="4">۴</button>
-    </div>
-  </div>
-
-  <div class="card disabled" id="echoSeqCard">
-    <p class="hint" style="margin-bottom:14px;">چند نت پشت‌سرهم از یه گام پخش می‌شه. بعدش میکروفون روشن می‌شه — همون توالی رو به‌ترتیب بخون.</p>
-    <p class="settings-title">نوع گام</p>
-    <div class="pill-group" id="echoSeqScaleTypeGroup">
-      <button class="pill active" data-val="major">ماژور</button>
-      <button class="pill" data-val="minor">مینور طبیعی</button>
-      <button class="pill" data-val="melodicMinor">مینور ملودیک</button>
-      <button class="pill" data-val="harmonicMinor">مینور هارمونیک</button>
-      <button class="pill" data-val="phrygian">فریژین</button>
-      <button class="pill" data-val="hijaz">حجاز</button>
-    </div>
-    <p class="sub-title">اکتاو</p>
-    <div class="octave-row" id="echoSeqOctaveGroup">
-      <button class="pill" data-val="2">اکتاو ۲</button>
-      <button class="pill active" data-val="3">اکتاو ۳</button>
-      <button class="pill" data-val="4">اکتاو ۴</button>
-    </div>
-    <p class="sub-title">تعداد نوت</p>
-    <div class="pill-group" id="echoSeqCountGroup">
-      <button class="pill" data-val="3">۳</button>
-      <button class="pill active" data-val="4">۴</button>
-      <button class="pill" data-val="5">۵</button>
-      <button class="pill" data-val="6">۶</button>
-      <button class="pill" data-val="7">۷</button>
-    </div>
-  </div>
-
   <div class="card stage" id="stageCard">
     <div class="stage-label" id="stageLabel">در حال بارگذاری صدای پیانو…</div>
     <button class="play-btn" id="playBtn" aria-label="پخش" disabled>▶</button>
-
-    <div class="echo-panel" id="echoPanel" style="display:none;">
-      <div class="echo-targets" id="echoTargetsRow"></div>
-      <div class="echo-live" id="echoLiveInfo">—</div>
-      <div class="echo-status" id="echoStatusText">برای شروع دکمه‌ی پخش رو بزن</div>
-    </div>
 
     <div class="perf-kb-wrap" id="perfKbWrap" style="display:none;">
       <div class="note-key-grid perf" id="perfKeyboard">
@@ -1123,12 +971,6 @@
         <button class="note-key sharp" data-pc="10" style="left:81.1%;" disabled></button>
         <button class="note-key" data-pc="11" disabled>B</button>
       </div>
-    </div>
-
-    <div class="echo-listen-wrap" id="echoListenWrap" style="display:none;">
-      <div class="echo-listen-indicator" id="echoListenIndicator">🎙️ در حال گوش دادن به صدات…</div>
-      <button class="reset" id="echoStopBtn" type="button">همین الان تموم کن</button>
-      <div class="echo-results" id="echoResults"></div>
     </div>
 
     <div class="choices" id="choicesWrap">
@@ -1407,15 +1249,43 @@ function decodeOne(ctx, name, base64){
   });
 }
 
+function createAudioContext(){
+  if(audioCtx) return audioCtx;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if(!AudioCtx) throw new Error('Web Audio API is not supported');
+  audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+async function ensureAudio(){
+  try {
+    const ctx = createAudioContext();
+    if(ctx.state !== 'running'){
+      await ctx.resume();
+    }
+    // Some iOS/Safari versions can report "running" one tick before the
+    // destination is actually usable. Waiting one animation frame makes
+    // sample playback much more reliable on GitHub Pages.
+    if(ctx.state === 'running'){
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    return true;
+  } catch(e){
+    console.error('AudioContext could not be started:', e);
+    return false;
+  }
+}
+
 async function initSampler(){
   document.getElementById('stageLabel').textContent = 'در حال آماده‌سازی صدای پیانو…';
   document.getElementById('playBtn').disabled = true;
 
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    createAudioContext();
   } catch(e){
     console.error('Could not create AudioContext', e);
-    useFallbackSynth();
+    document.getElementById('stageLabel').textContent =
+      'مرورگر از Web Audio پشتیبانی نمی‌کند.';
     return;
   }
 
@@ -1432,26 +1302,20 @@ async function initSampler(){
     }
   });
 
+  // Never replace the real piano samples with a synthetic sound when the
+  // embedded samples are available. If decoding is partial, keep every
+  // successfully decoded piano sample and retry the missing ones on demand.
   if(successCount === 0){
-    useFallbackSynth();
+    samplerReady = false;
+    document.getElementById('playBtn').disabled = true;
+    document.getElementById('stageLabel').textContent =
+      'صدای پیانو آماده نشد؛ یک‌بار صفحه را تازه‌سازی کن.';
     return;
   }
 
   samplerReady = true;
   document.getElementById('playBtn').disabled = false;
   document.getElementById('stageLabel').textContent = 'برای شروع دکمه پخش رو بزن';
-}
-
-function useFallbackSynth(){
-  if(usingFallback || samplerReady) return;
-  usingFallback = true;
-  samplerReady = true;
-  if(!audioCtx){
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    catch(e){ console.error('Fallback AudioContext failed', e); }
-  }
-  document.getElementById('playBtn').disabled = false;
-  document.getElementById('stageLabel').textContent = 'صدای شبیه‌سازی‌شده فعال شد. برای شروع دکمه پخش رو بزن';
 }
 
 function nearestSampleName(targetOffset){
@@ -1516,6 +1380,8 @@ function playFallbackNote(offset, startTime, duration){
 // plays a note given as a semitone offset from C4, `delay` seconds from now, for `duration` seconds
 function playOffset(offset, delay, duration){
   if(!samplerReady || !audioCtx) return;
+  // The actual audio is ALWAYS the embedded piano sample. No oscillator or
+  // pitch-detection data is involved in exercise playback.
   const startTime = audioCtx.currentTime + delay;
   if(usingFallback){
     playFallbackNote(offset, startTime, duration);
@@ -1524,15 +1390,10 @@ function playOffset(offset, delay, duration){
   }
 }
 
-async function ensureAudio(){
-  if(audioCtx && audioCtx.state !== 'running'){
-    await audioCtx.resume();
-  }
-}
-
-// Kick off piano sample decoding immediately on page load (don't wait for a click,
-// since the play button starts disabled and would otherwise create a deadlock).
-initSampler();
+// Kick off piano sample decoding immediately on page load. Playback itself is
+// still unlocked by a real user gesture through ensureAudio(), as required by
+// iOS/Safari autoplay policy.
+let samplerInitPromise = initSampler();
 
 // ---------- Game logic ----------
 
@@ -1713,7 +1574,8 @@ function showPerfKeyboard(show){
 }
 
 async function playScalePerformance(){
-  await ensureAudio();
+  if(!(await ensureAudio())) return;
+  if(!samplerReady && samplerInitPromise) await samplerInitPromise;
   if(!samplerReady) return;
 
   document.getElementById('feedback').textContent = '';
@@ -1781,7 +1643,8 @@ function buildGravitySequence(settings){
 }
 
 async function playGravityPerformance(){
-  await ensureAudio();
+  if(!(await ensureAudio())) return;
+  if(!samplerReady && samplerInitPromise) await samplerInitPromise;
   if(!samplerReady) return;
 
   document.getElementById('feedback').textContent = '';
@@ -1813,7 +1676,8 @@ async function playGravityPerformance(){
 
 // ---------- Single note player (پخش نوت): click a key, hear that note ----------
 async function playSingleNote(pc){
-  await ensureAudio();
+  if(!(await ensureAudio())) return;
+  if(!samplerReady && samplerInitPromise) await samplerInitPromise;
   if(!samplerReady) return;
 
   const octave = parseInt(document.querySelector('#noteOctaveGroup .pill.active').dataset.val, 10);
@@ -1824,57 +1688,126 @@ async function playSingleNote(pc){
 }
 
 // ---------- Live tuner (تیونر): real-time pitch detection from the microphone ----------
+// The tuner is completely independent of the piano samples above.
+// It estimates the singer's fundamental frequency (F0) directly from the mic.
+
 let tunerRunning = false;
 let tunerStream = null;
+let tunerSource = null;
+let tunerFilter = null;
 let tunerAnalyser = null;
 let tunerRafId = null;
 let tunerBuffer = null;
+let tunerUsesByteFallback = false;
+let tunerByteBuffer = null;
+let tunerFrameCounter = 0;
+let tunerFreqHistory = [];
+let tunerSmoothedFreq = -1;
 
-// Classic autocorrelation pitch detector (ACF2+), returns frequency in Hz or -1 if too quiet/unclear
 function autoCorrelatePitch(buf, sampleRate){
   const SIZE = buf.length;
+
+  // Remove DC offset and calculate RMS in one pass.
+  let mean = 0;
+  for(let i = 0; i < SIZE; i++) mean += buf[i];
+  mean /= SIZE;
+
   let rms = 0;
-  for(let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+  for(let i = 0; i < SIZE; i++){
+    const v = buf[i] - mean;
+    rms += v * v;
+    buf[i] = v;
+  }
   rms = Math.sqrt(rms / SIZE);
-  if(rms < 0.01) return -1; // too quiet / silence
 
-  let r1 = 0, r2 = SIZE - 1;
-  const thres = 0.2;
-  for(let i = 0; i < SIZE / 2; i++){
-    if(Math.abs(buf[i]) < thres){ r1 = i; break; }
-  }
-  for(let i = 1; i < SIZE / 2; i++){
-    if(Math.abs(buf[SIZE - i]) < thres){ r2 = SIZE - i; break; }
-  }
+  // Much more sensitive than the old 0.01 gate. This matters on an iPhone
+  // when the singer is not speaking directly into the bottom microphone.
+  if(rms < 0.0025) return -1;
 
-  const trimmed = buf.slice(r1, r2);
-  const newSize = trimmed.length;
-  if(newSize < 8) return -1;
+  // Voice-focused search range. Restricting the lag range makes the detector
+  // substantially faster and reduces octave errors.
+  const minFreq = 70;
+  const maxFreq = 900;
+  const minLag = Math.max(2, Math.floor(sampleRate / maxFreq));
+  const maxLag = Math.min(SIZE - 3, Math.ceil(sampleRate / minFreq));
 
-  const c = new Array(newSize).fill(0);
-  for(let i = 0; i < newSize; i++){
-    for(let j = 0; j < newSize - i; j++){
-      c[i] += trimmed[j] * trimmed[j + i];
+  // Normalized autocorrelation. We look for the FIRST convincing local peak
+  // rather than simply taking the largest peak, which is a common source of
+  // octave-down errors in singing.
+  let bestLag = -1;
+  let bestCorr = 0;
+  let previous = 1;
+
+  for(let lag = minLag; lag <= maxLag; lag++){
+    let sumXY = 0, sumX2 = 0, sumY2 = 0;
+    const n = SIZE - lag;
+
+    for(let i = 0; i < n; i++){
+      const x = buf[i];
+      const y = buf[i + lag];
+      sumXY += x * y;
+      sumX2 += x * x;
+      sumY2 += y * y;
     }
+
+    const denom = Math.sqrt(sumX2 * sumY2);
+    const corr = denom > 1e-12 ? sumXY / denom : 0;
+
+    // A local maximum above this confidence is usually the fundamental.
+    if(corr > 0.45 && corr >= previous && (lag === maxLag || corr >= 0)){
+      let nextSumXY = 0, nextX2 = 0, nextY2 = 0;
+      const n2 = SIZE - (lag + 1);
+      for(let i = 0; i < n2; i++){
+        const x = buf[i], y = buf[i + lag + 1];
+        nextSumXY += x * y;
+        nextX2 += x * x;
+        nextY2 += y * y;
+      }
+      const nextDen = Math.sqrt(nextX2 * nextY2);
+      const nextCorr = nextDen > 1e-12 ? nextSumXY / nextDen : 0;
+
+      if(corr >= nextCorr){
+        bestLag = lag;
+        bestCorr = corr;
+        break;
+      }
+    }
+
+    if(corr > bestCorr){
+      bestCorr = corr;
+      bestLag = lag;
+    }
+    previous = corr;
   }
 
-  let d = 0;
-  while(d < newSize - 1 && c[d] > c[d + 1]) d++;
+  if(bestLag < 0 || bestCorr < 0.40) return -1;
 
-  let maxVal = -1, maxPos = -1;
-  for(let i = d; i < newSize; i++){
-    if(c[i] > maxVal){ maxVal = c[i]; maxPos = i; }
+  // Parabolic interpolation for sub-sample precision.
+  const lag = bestLag;
+  function corrAt(L){
+    if(L < minLag || L > maxLag) return bestCorr;
+    let xy = 0, xx = 0, yy = 0;
+    const n = SIZE - L;
+    for(let i = 0; i < n; i++){
+      const x = buf[i], y = buf[i + L];
+      xy += x * y; xx += x * x; yy += y * y;
+    }
+    const den = Math.sqrt(xx * yy);
+    return den > 1e-12 ? xy / den : 0;
   }
-  let T0 = maxPos;
-  if(T0 <= 0) return -1;
 
-  const x1 = c[T0 - 1] || 0, x2 = c[T0], x3 = c[T0 + 1] || 0;
-  const a = (x1 + x3 - 2 * x2) / 2;
-  const b = (x3 - x1) / 2;
-  if(a !== 0) T0 = T0 - b / (2 * a);
+  const c1 = corrAt(lag - 1);
+  const c2 = corrAt(lag);
+  const c3 = corrAt(lag + 1);
+  const denom = c1 - 2 * c2 + c3;
+  const shift = Math.abs(denom) > 1e-9
+    ? 0.5 * (c1 - c3) / denom
+    : 0;
 
-  const freq = sampleRate / T0;
-  if(!isFinite(freq) || freq < 50 || freq > 2000) return -1;
+  const period = lag + Math.max(-0.5, Math.min(0.5, shift));
+  const freq = sampleRate / period;
+
+  if(!isFinite(freq) || freq < minFreq || freq > maxFreq) return -1;
   return freq;
 }
 
@@ -1884,11 +1817,7 @@ function freqToNoteInfo(freq){
   const cents = (midi - nearestMidi) * 100;
   const idx = ((nearestMidi % 12) + 12) % 12;
   const octave = Math.floor(nearestMidi / 12) - 1;
-  return { name: NOTE_NAMES[idx] + octave, cents, offsetFromC4: nearestMidi - 60 };
-}
-
-function offsetToFreq(offset){
-  return 261.63 * Math.pow(2, offset / 12);
+  return { name: NOTE_NAMES[idx] + octave, cents };
 }
 
 function updateTunerNeedle(cents){
@@ -1906,8 +1835,36 @@ function updateTunerNeedle(cents){
   else needle.classList.add('off');
 }
 
-let tunerUsesByteFallback = false;
-let tunerByteBuffer = null;
+function smoothTunerFrequency(freq){
+  if(freq <= 0) return -1;
+
+  tunerFreqHistory.push(freq);
+  if(tunerFreqHistory.length > 5) tunerFreqHistory.shift();
+
+  // Median rejects a single octave/period glitch before the EMA.
+  const sorted = tunerFreqHistory.slice().sort((a,b) => a-b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+
+  if(tunerSmoothedFreq < 0){
+    tunerSmoothedFreq = median;
+  } else {
+    // Faster response when starting/changing notes, gentle smoothing while held.
+    const alpha = Math.abs(1200 * Math.log2(median / tunerSmoothedFreq)) > 100 ? 0.45 : 0.22;
+    tunerSmoothedFreq += alpha * (median - tunerSmoothedFreq);
+  }
+  return tunerSmoothedFreq;
+}
+
+function resetTunerDisplay(){
+  document.getElementById('tunerNote').textContent = '–';
+  document.getElementById('tunerFreq').textContent = '\u00A0';
+  document.getElementById('tunerStatus').textContent = 'در حال شنیدن… (بخون تا نت رو نشون بدم)';
+  const needle = document.getElementById('tunerNeedle');
+  needle.style.left = '50%';
+  needle.style.right = 'auto';
+  needle.style.transform = 'translateX(-50%)';
+  needle.classList.remove('in-tune', 'close', 'off');
+}
 
 function tunerLoop(){
   if(!tunerRunning) return;
@@ -1922,33 +1879,33 @@ function tunerLoop(){
       tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
     }
 
-    const freq = autoCorrelatePitch(tunerBuffer, audioCtx.sampleRate);
+    // Pitch detection does not need to run 60 times/sec. Running it every
+    // third frame leaves the UI fluid while reducing CPU load on iPhone.
+    tunerFrameCounter++;
+    if(tunerFrameCounter % 3 === 0){
+      const freq = autoCorrelatePitch(tunerBuffer, audioCtx.sampleRate);
 
-    if(freq > 0){
-      const info = freqToNoteInfo(freq);
-      document.getElementById('tunerNote').textContent = info.name;
-      document.getElementById('tunerFreq').textContent = freq.toFixed(1) + ' Hz  —  ' +
-        (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت';
-      document.getElementById('tunerStatus').textContent = 'در حال شنیدن…';
-      updateTunerNeedle(info.cents);
-    } else {
-      document.getElementById('tunerNote').textContent = '–';
-      document.getElementById('tunerFreq').textContent = '\u00A0';
-      document.getElementById('tunerStatus').textContent = 'در حال شنیدن… (بخون تا نت رو نشون بدم)';
-      const needle = document.getElementById('tunerNeedle');
-      needle.style.left = '50%';
-      needle.style.right = 'auto';
-      needle.style.transform = 'translateX(-50%)';
-      needle.classList.remove('in-tune', 'close', 'off');
+      if(freq > 0){
+        const stableFreq = smoothTunerFrequency(freq);
+        const info = freqToNoteInfo(stableFreq);
+        document.getElementById('tunerNote').textContent = info.name;
+        document.getElementById('tunerFreq').textContent = stableFreq.toFixed(1) + ' Hz  —  ' +
+          (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت';
+        document.getElementById('tunerStatus').textContent = 'در حال شنیدن…';
+        updateTunerNeedle(info.cents);
+      } else if(tunerFreqHistory.length === 0){
+        resetTunerDisplay();
+      }
     }
   } catch(e){
     console.error('Tuner loop error', e);
-    if(!tunerUsesByteFallback && typeof tunerAnalyser.getFloatTimeDomainData !== 'function'){
-      // this browser doesn't support getFloatTimeDomainData at all — switch to the byte fallback and keep going
+    if(!tunerUsesByteFallback && tunerAnalyser &&
+       typeof tunerAnalyser.getFloatTimeDomainData !== 'function'){
       tunerUsesByteFallback = true;
       tunerByteBuffer = new Uint8Array(tunerAnalyser.fftSize);
     } else {
-      document.getElementById('tunerStatus').textContent = 'خطای موقت در تشخیص صدا، در حال تلاش دوباره…';
+      document.getElementById('tunerStatus').textContent =
+        'خطای موقت در تشخیص صدا، در حال تلاش دوباره…';
     }
   }
 
@@ -1956,15 +1913,29 @@ function tunerLoop(){
 }
 
 async function startTuner(){
+  if(tunerRunning) return;
+
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     document.getElementById('tunerStatus').textContent =
       'این مرورگر از دسترسی به میکروفون پشتیبانی نمی‌کنه یا صفحه امن (HTTPS/localhost) نیست.';
     return;
   }
 
+  // Resume/create audio from the same user gesture that opens the tuner.
+  if(!(await ensureAudio())){
+    document.getElementById('tunerStatus').textContent =
+      'صدای مرورگر فعال نشد. صفحه را یک‌بار تازه‌سازی کن و دوباره بزن.';
+    return;
+  }
+
   try {
     tunerStream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: true,
+        channelCount: 1
+      }
     });
   } catch(e){
     console.error('Microphone access failed', e);
@@ -1982,34 +1953,63 @@ async function startTuner(){
     return;
   }
 
-  if(!audioCtx){
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if(audioCtx.state !== 'running'){
-    await audioCtx.resume();
-  }
+  try {
+    tunerSource = audioCtx.createMediaStreamSource(tunerStream);
+    tunerFilter = audioCtx.createBiquadFilter();
+    tunerFilter.type = 'highpass';
+    tunerFilter.frequency.value = 55;
+    tunerFilter.Q.value = 0.7;
 
-  const source = audioCtx.createMediaStreamSource(tunerStream);
-  tunerAnalyser = audioCtx.createAnalyser();
-  tunerAnalyser.fftSize = 2048;
-  tunerBuffer = new Float32Array(tunerAnalyser.fftSize);
-  tunerUsesByteFallback = false;
-  tunerByteBuffer = null;
-  source.connect(tunerAnalyser);
+    tunerAnalyser = audioCtx.createAnalyser();
+    tunerAnalyser.fftSize = 4096;
+    tunerAnalyser.smoothingTimeConstant = 0;
+    tunerBuffer = new Float32Array(tunerAnalyser.fftSize);
 
-  tunerRunning = true;
-  document.getElementById('tunerMicBtn').classList.add('listening');
-  document.getElementById('tunerStatus').textContent = 'در حال شنیدن…';
-  tunerLoop();
+    tunerUsesByteFallback = false;
+    tunerByteBuffer = null;
+    tunerFrameCounter = 0;
+    tunerFreqHistory = [];
+    tunerSmoothedFreq = -1;
+
+    tunerSource.connect(tunerFilter);
+    tunerFilter.connect(tunerAnalyser);
+
+    tunerRunning = true;
+    document.getElementById('tunerMicBtn').classList.add('listening');
+    document.getElementById('tunerStatus').textContent =
+      'در حال شنیدن… بخون، حتی با فاصله از گوشی';
+    tunerLoop();
+  } catch(e){
+    console.error('Could not initialise tuner:', e);
+    tunerStream.getTracks().forEach(t => t.stop());
+    tunerStream = null;
+    document.getElementById('tunerStatus').textContent =
+      'راه‌اندازی تیونر ممکن نشد. صفحه را تازه‌سازی کن و دوباره امتحان کن.';
+  }
 }
 
 function stopTuner(){
   tunerRunning = false;
   if(tunerRafId) cancelAnimationFrame(tunerRafId);
+  tunerRafId = null;
+
+  if(tunerSource){
+    try { tunerSource.disconnect(); } catch(e){}
+    tunerSource = null;
+  }
+  if(tunerFilter){
+    try { tunerFilter.disconnect(); } catch(e){}
+    tunerFilter = null;
+  }
   if(tunerStream){
     tunerStream.getTracks().forEach(t => t.stop());
     tunerStream = null;
   }
+
+  tunerFreqHistory = [];
+  tunerSmoothedFreq = -1;
+  tunerFrameCounter = 0;
+
   document.getElementById('tunerMicBtn').classList.remove('listening');
   document.getElementById('tunerStatus').textContent = 'برای شروع دکمه‌ی میکروفون رو بزن';
   document.getElementById('tunerNote').textContent = '–';
@@ -2019,220 +2019,6 @@ function stopTuner(){
   needle.style.right = 'auto';
   needle.style.transform = 'translateX(-50%)';
   needle.classList.remove('in-tune', 'close', 'off');
-}
-
-// ---------- Echo engine: listens via mic and matches sung pitch against a target sequence ----------
-// Shared by "تکرار نت" (single note) and "تکرار توالی" (sequence of notes).
-let echoStream = null, echoAnalyser = null, echoBuffer = null, echoRafId = null, echoRunning = false;
-let echoUsesByteFallback = false, echoByteBuffer = null;
-let echoTargets = [];       // array of semitone offsets from C4, in order
-let echoIndex = 0;          // which target we're currently trying to match
-let echoMatchStartTime = null;
-const ECHO_MATCH_CENTS_TOLERANCE = 40;
-const ECHO_MATCH_HOLD_SECONDS = 0.35;
-
-function renderEchoTargets(){
-  const row = document.getElementById('echoTargetsRow');
-  row.innerHTML = '';
-  echoTargets.forEach((offset, i) => {
-    const pill = document.createElement('div');
-    pill.className = 'echo-target-pill';
-    if(i < echoIndex) { pill.classList.add('matched'); pill.textContent = noteNameFromSemitone(offset); }
-    else if(i === echoIndex) { pill.classList.add('current'); pill.textContent = '؟'; }
-    else { pill.textContent = '؟'; }
-    row.appendChild(pill);
-  });
-}
-
-async function startEchoListening(targets, onAllMatched){
-  echoTargets = targets;
-  echoIndex = 0;
-  echoMatchStartTime = null;
-  document.getElementById('echoPanel').style.display = 'block';
-  renderEchoTargets();
-  document.getElementById('echoLiveInfo').textContent = '—';
-  document.getElementById('echoStatusText').textContent = 'در حال درخواست دسترسی میکروفون…';
-
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    document.getElementById('echoStatusText').textContent =
-      'این مرورگر از دسترسی به میکروفون پشتیبانی نمی‌کنه یا صفحه امن (HTTPS/localhost) نیست.';
-    return;
-  }
-
-  try {
-    echoStream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-    });
-  } catch(e){
-    console.error('Echo mic access failed', e);
-    let msg;
-    if(!window.isSecureContext){
-      msg = 'میکروفون فقط توی صفحات امن (https:// یا localhost) کار می‌کنه.';
-    } else if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError'){
-      msg = 'دسترسی میکروفون رد شد. توی تنظیمات اجازه بده و دوباره امتحان کن.';
-    } else if(e.name === 'NotFoundError'){
-      msg = 'میکروفونی روی این دستگاه پیدا نشد.';
-    } else {
-      msg = 'دسترسی به میکروفون ممکن نشد (' + e.name + ').';
-    }
-    document.getElementById('echoStatusText').textContent = msg;
-    return;
-  }
-
-  if(!audioCtx){
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if(audioCtx.state !== 'running'){
-    await audioCtx.resume();
-  }
-
-  const source = audioCtx.createMediaStreamSource(echoStream);
-  echoAnalyser = audioCtx.createAnalyser();
-  echoAnalyser.fftSize = 2048;
-  echoBuffer = new Float32Array(echoAnalyser.fftSize);
-  echoUsesByteFallback = false;
-  echoByteBuffer = null;
-  source.connect(echoAnalyser);
-
-  echoRunning = true;
-  document.getElementById('echoStatusText').textContent = 'الان بخون…';
-  echoLoop(onAllMatched);
-}
-
-function stopEchoListening(){
-  echoRunning = false;
-  if(echoRafId) cancelAnimationFrame(echoRafId);
-  if(echoStream){
-    echoStream.getTracks().forEach(t => t.stop());
-    echoStream = null;
-  }
-}
-
-function echoLoop(onAllMatched){
-  if(!echoRunning) return;
-
-  try {
-    if(echoUsesByteFallback){
-      echoAnalyser.getByteTimeDomainData(echoByteBuffer);
-      for(let i = 0; i < echoByteBuffer.length; i++){
-        echoBuffer[i] = (echoByteBuffer[i] - 128) / 128;
-      }
-    } else {
-      echoAnalyser.getFloatTimeDomainData(echoBuffer);
-    }
-
-    const freq = autoCorrelatePitch(echoBuffer, audioCtx.sampleRate);
-    const liveEl = document.getElementById('echoLiveInfo');
-    const statusEl = document.getElementById('echoStatusText');
-
-    if(freq > 0 && echoIndex < echoTargets.length){
-      const info = freqToNoteInfo(freq);
-      liveEl.textContent = info.name + '  (' + (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت)';
-
-      const targetFreq = offsetToFreq(echoTargets[echoIndex]);
-      const centsDiff = 1200 * Math.log2(freq / targetFreq);
-
-      if(Math.abs(centsDiff) <= ECHO_MATCH_CENTS_TOLERANCE){
-        if(echoMatchStartTime === null) echoMatchStartTime = audioCtx.currentTime;
-        const held = audioCtx.currentTime - echoMatchStartTime;
-        statusEl.textContent = 'همینه! نگهش دار… (' + Math.min(1, held / ECHO_MATCH_HOLD_SECONDS).toFixed(0) + ')';
-        if(held >= ECHO_MATCH_HOLD_SECONDS){
-          echoIndex++;
-          echoMatchStartTime = null;
-          renderEchoTargets();
-          if(echoIndex >= echoTargets.length){
-            statusEl.textContent = '🎉 عالی بود! همه رو درست خوندی.';
-            stopEchoListening();
-            if(onAllMatched) onAllMatched();
-            return;
-          } else {
-            statusEl.textContent = 'درسته! حالا نت بعدی رو بخون.';
-          }
-        }
-      } else {
-        echoMatchStartTime = null;
-        statusEl.textContent = 'الان بخون…';
-      }
-    } else {
-      document.getElementById('echoLiveInfo').textContent = '—';
-    }
-  } catch(e){
-    console.error('Echo loop error', e);
-    if(!echoUsesByteFallback && typeof echoAnalyser.getFloatTimeDomainData !== 'function'){
-      echoUsesByteFallback = true;
-      echoByteBuffer = new Uint8Array(echoAnalyser.fftSize);
-    }
-  }
-
-  echoRafId = requestAnimationFrame(() => echoLoop(onAllMatched));
-}
-
-// ---------- تکرار نت: play one random note in a chosen octave range, then listen ----------
-async function playEchoNoteRound(){
-  await ensureAudio();
-  if(!samplerReady) return;
-
-  stopEchoListening();
-  document.getElementById('echoPanel').style.display = 'none';
-  document.getElementById('playBtn').disabled = true;
-  document.getElementById('stageLabel').textContent = 'در حال پخش…';
-
-  const octMin = parseInt(document.querySelector('#echoNoteOctaveMinGroup .pill.active').dataset.val, 10);
-  const octMax = parseInt(document.querySelector('#echoNoteOctaveMaxGroup .pill.active').dataset.val, 10);
-  const lo = Math.min(octMin, octMax), hi = Math.max(octMin, octMax);
-
-  const octave = lo + Math.floor(Math.random() * (hi - lo + 1));
-  const pc = Math.floor(Math.random() * 12);
-  const offset = pc + (octave - 4) * 12;
-
-  playOffset(offset, 0.1, 1.0);
-  highlightPerfKey(offset, 0.1, 1.0);
-
-  setTimeout(() => {
-    document.getElementById('playBtn').disabled = false;
-    document.getElementById('stageLabel').textContent = 'حالا همین نت رو بخون';
-    startEchoListening([offset], () => {
-      document.getElementById('stageLabel').textContent = 'برای یه نت جدید دوباره دکمه‌ی پخش رو بزن';
-    });
-  }, 1300);
-}
-
-// ---------- تکرار توالی: play N notes from a scale, then listen for all N in order ----------
-async function playEchoSeqRound(){
-  await ensureAudio();
-  if(!samplerReady) return;
-
-  stopEchoListening();
-  document.getElementById('echoPanel').style.display = 'none';
-  document.getElementById('playBtn').disabled = true;
-  document.getElementById('stageLabel').textContent = 'در حال پخش…';
-
-  const scaleType = document.querySelector('#echoSeqScaleTypeGroup .pill.active').dataset.val;
-  const octave = parseInt(document.querySelector('#echoSeqOctaveGroup .pill.active').dataset.val, 10);
-  const count = parseInt(document.querySelector('#echoSeqCountGroup .pill.active').dataset.val, 10);
-
-  const degrees = SCALE_PATTERNS[scaleType].slice(0, 7);
-  const rootOffset = (octave - 4) * 12;
-  const targets = [];
-  for(let i = 0; i < count; i++){
-    targets.push(degrees[Math.floor(Math.random() * degrees.length)] + rootOffset);
-  }
-
-  const dur = 0.5, gap = 0.12;
-  let t = 0.1;
-  targets.forEach(offset => {
-    playOffset(offset, t, dur);
-    highlightPerfKey(offset, t, dur);
-    t += dur + gap;
-  });
-
-  setTimeout(() => {
-    document.getElementById('playBtn').disabled = false;
-    document.getElementById('stageLabel').textContent = 'حالا همین توالی رو به‌ترتیب بخون';
-    startEchoListening(targets, () => {
-      document.getElementById('stageLabel').textContent = 'برای یه توالی جدید دوباره دکمه‌ی پخش رو بزن';
-    });
-  }, t * 1000 + 150);
 }
 
 // ---------- Recognition mode (تشخیص): plays a reference scale/tetrachord,
@@ -2278,7 +2064,8 @@ function renderRecogChoiceButtons(options, enabled){
 }
 
 async function newRecogRound(){
-  await ensureAudio();
+  if(!(await ensureAudio())) return;
+  if(!samplerReady && samplerInitPromise) await samplerInitPromise;
   if(!samplerReady) return;
 
   answered = false;
@@ -2423,7 +2210,8 @@ function answerRecog(value){
 }
 
 async function newRound(){
-  await ensureAudio();
+  if(!(await ensureAudio())) return;
+  if(!samplerReady && samplerInitPromise) await samplerInitPromise;
   if(!samplerReady) return;
 
   answered = false;
@@ -2541,7 +2329,8 @@ function newScaleRound(){
 }
 
 async function replay(){
-  await ensureAudio();
+  if(!(await ensureAudio())) return;
+  if(!samplerReady && samplerInitPromise) await samplerInitPromise;
   if(!samplerReady) return;
 
   if(currentMode === 'scale'){
@@ -2807,14 +2596,6 @@ document.getElementById('playBtn').addEventListener('click', () => {
     playGravityPerformance();
     return;
   }
-  if(currentMode === 'echoNote'){
-    playEchoNoteRound();
-    return;
-  }
-  if(currentMode === 'echoSeq'){
-    playEchoSeqRound();
-    return;
-  }
   if(currentMode === 'recog'){
     if(!answered && recogAnswerValue !== null){
       replayRecog();
@@ -2901,7 +2682,7 @@ document.querySelectorAll('#scaleLengthGroup .pill').forEach(pill => {
   });
 });
 
-['playScaleTypeGroup', 'playDirGroup', 'playOctaveGroup', 'playOctaveCountGroup', 'playIncludeTopGroup', 'playSpeedGroup', 'noteOctaveGroup', 'noteDurationGroup', 'recogSubModeGroup', 'recogLengthGroup', 'recogScaleTypeGroup', 'recogOctaveGroup', 'recogSpeedGroup', 'gravityScaleTypeGroup', 'gravityOctaveGroup', 'gravityDirGroup', 'gravitySpeedGroup', 'echoNoteOctaveMinGroup', 'echoNoteOctaveMaxGroup', 'echoSeqScaleTypeGroup', 'echoSeqOctaveGroup', 'echoSeqCountGroup'].forEach(groupId => {
+['playScaleTypeGroup', 'playDirGroup', 'playOctaveGroup', 'playOctaveCountGroup', 'playIncludeTopGroup', 'playSpeedGroup', 'noteOctaveGroup', 'noteDurationGroup', 'recogSubModeGroup', 'recogLengthGroup', 'recogScaleTypeGroup', 'recogOctaveGroup', 'recogSpeedGroup', 'gravityScaleTypeGroup', 'gravityOctaveGroup', 'gravityDirGroup', 'gravitySpeedGroup'].forEach(groupId => {
   document.querySelectorAll('#' + groupId + ' .pill').forEach(pill => {
     pill.addEventListener('click', () => {
       document.querySelectorAll('#' + groupId + ' .pill').forEach(p => p.classList.remove('active'));
@@ -2961,11 +2742,6 @@ document.getElementById('gravityRepeatPlus').addEventListener('click', () => {
   el.textContent = v;
 });
 
-document.getElementById('echoStopBtn').addEventListener('click', () => {
-  stopEchoListening();
-  document.getElementById('echoStatusText').textContent = 'متوقف شد. برای شروع دوباره دکمه‌ی پخش رو بزن.';
-});
-
 document.querySelectorAll('#modeGroup .pill').forEach(pill => {
   pill.addEventListener('click', () => {
     document.querySelectorAll('#modeGroup .pill').forEach(p => p.classList.remove('active'));
@@ -2979,10 +2755,6 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     const recogCard = document.getElementById('recogCard');
     const gravityCard = document.getElementById('gravityCard');
     const tunerCard = document.getElementById('tunerCard');
-    const echoNoteCard = document.getElementById('echoNoteCard');
-    const echoSeqCard = document.getElementById('echoSeqCard');
-    const echoPanel = document.getElementById('echoPanel');
-    const echoListenWrap = document.getElementById('echoListenWrap');
     const stageCard = document.getElementById('stageCard');
     const mainTitle = document.getElementById('mainTitle');
     const introText = document.getElementById('introText');
@@ -3002,10 +2774,6 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     recogCard.classList.add('disabled');
     gravityCard.classList.add('disabled');
     tunerCard.classList.add('disabled');
-    echoNoteCard.classList.add('disabled');
-    echoSeqCard.classList.add('disabled');
-    echoPanel.style.display = 'none';
-    echoListenWrap.style.display = 'none';
     stageCard.style.display = 'block';
     choicesWrap.style.display = 'none';
     scaleChoicesWrap.style.display = 'none';
@@ -3013,11 +2781,6 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     recogChoicesWrap.innerHTML = '';
     recogAnswerValue = null;
     recogFullTimeline = [];
-
-    // leaving the echo modes should always release the microphone
-    if(currentMode !== 'echoNote' && currentMode !== 'echoSeq'){
-      stopEchoListening();
-    }
 
     // leaving the tuner mode should always release the microphone
     if(currentMode !== 'tuner' && tunerRunning){
@@ -3085,16 +2848,6 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
       stageCard.style.display = 'none';
       mainTitle.textContent = 'تیونر';
       introText.textContent = 'بخون تا مرورگر با میکروفون نت و فرکانس صدات رو لحظه‌به‌لحظه نشون بده — دقیقاً مثل یه تیونر واقعی.';
-    } else if(currentMode === 'echoNote'){
-      echoNoteCard.classList.remove('disabled');
-      mainTitle.textContent = 'تکرار نت';
-      introText.textContent = 'یه نت پخش می‌شه، تو با صدات یا سازت همون نت رو تکرار کن. بعد از پخش، میکروفون خودکار روشن می‌شه.';
-      showPerfKeyboard(true);
-    } else if(currentMode === 'echoSeq'){
-      echoSeqCard.classList.remove('disabled');
-      mainTitle.textContent = 'تکرار ملودی';
-      introText.textContent = 'چند نت پشت‌سرهم از یه گام پخش می‌شه، تو با صدات یکی‌یکی تکرارشون کن.';
-      showPerfKeyboard(true);
     }
 
     currentDirection = null;
