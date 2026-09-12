@@ -574,6 +574,18 @@
     margin:0 auto;
   }
 
+  .imitate-select{
+    width:100%; padding:10px 12px; border:1.5px solid var(--line);
+    border-radius:12px; background:var(--card-soft); color:var(--ink);
+    font-family:inherit; font-size:13px; font-weight:600;
+  }
+  .imitate-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .imitate-range label{display:flex;flex-direction:column;gap:6px;font-size:11.5px;color:var(--ink-faint);font-weight:600;}
+  .imitate-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;}
+  .secondary-btn{flex:1;padding:12px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--card-soft);color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+  .secondary-btn:disabled{opacity:.45;cursor:default;}
+  .secondary-btn.danger{color:var(--down);border-color:var(--down-line);}
+  .imitate-progress{margin-top:12px;font-size:12px;color:var(--ink-faint);min-height:18px;}
   .feedback{
     min-height:26px;
     margin-top:18px;
@@ -703,6 +715,7 @@
       <button class="pill mode-pill" data-mode="play">گام‌نوازی</button>
       <button class="pill mode-pill" data-mode="notePlayer">پیانو</button>
       <button class="pill mode-pill" data-mode="recog">تشخیص</button>
+      <button class="pill mode-pill" data-mode="imitate">تکرار نت / ملودی</button>
       <button class="pill mode-pill" data-mode="gravity">جاذبه</button>
       <button class="pill mode-pill" data-mode="tuner">تیونر</button>
     </div>
@@ -931,6 +944,42 @@
     </div>
   </div>
 
+  <div class="card disabled" id="imitateCard">
+    <p class="settings-title">نوع تمرین</p>
+    <div class="pill-group" id="imitateSubModeGroup">
+      <button class="pill active" data-val="note">تکرار نت</button>
+      <button class="pill" data-val="melody">تکرار ملودی</button>
+    </div>
+    <p class="sub-title">نوع گام</p>
+    <div class="pill-group" id="imitateScaleGroup">
+      <button class="pill active" data-val="major">ماژور</button>
+      <button class="pill" data-val="minor">مینور طبیعی</button>
+      <button class="pill" data-val="melodicMinor">مینور ملودیک</button>
+      <button class="pill" data-val="harmonicMinor">مینور هارمونیک</button>
+      <button class="pill" data-val="phrygian">فریژین</button>
+      <button class="pill" data-val="hijaz">حجاز</button>
+    </div>
+    <div id="imitateMelodyOnlySettings">
+      <p class="sub-title">نوع ملودی</p>
+      <div class="pill-group" id="imitateMelodyTypeGroup">
+        <button class="pill active" data-val="stepwise">پلکانی</button>
+        <button class="pill" data-val="free">آزاد</button>
+      </div>
+      <p class="sub-title">تعداد نت‌های ملودی</p>
+      <div class="pill-row" id="imitateLengthGroup">
+        <button class="pill" data-val="3">۳ نت</button>
+        <button class="pill active" data-val="5">۵ نت</button>
+        <button class="pill" data-val="7">۷ نت</button>
+      </div>
+    </div>
+    <p class="sub-title">محدوده صوتی</p>
+    <div class="imitate-range">
+      <label>از<select class="imitate-select" id="imitateRangeMin"></select></label>
+      <label>تا<select class="imitate-select" id="imitateRangeMax"></select></label>
+    </div>
+    <p class="hint">نت‌ها فقط از همین بازه و از گام انتخاب‌شده انتخاب می‌شوند؛ تعداد نت‌های موجود در این بازه محدود نیست.</p>
+  </div>
+
   <div class="card disabled" id="tunerCard">
     <p class="hint" style="margin-bottom:16px;">با زدن دکمه، مرورگر ازت اجازه‌ی دسترسی به میکروفون می‌خواد. بعدش هر نتی که بخونی، همون لحظه روی صفحه نشون داده می‌شه.</p>
     <div class="tuner-wrap">
@@ -999,6 +1048,12 @@
 
     <div class="scale-grid" id="recogChoicesWrap" style="display:none;"></div>
 
+    <div class="imitate-progress" id="imitateProgress" style="display:none;"></div>
+    <div class="imitate-actions" id="imitateActions" style="display:none;">
+      <button class="secondary-btn" id="imitateReplayBtn" type="button">↻ پخش دوباره</button>
+      <button class="secondary-btn danger" id="imitateSkipBtn" type="button">رد شدن</button>
+    </div>
+
     <div class="feedback" id="feedback"></div>
     <div class="note-tag" id="noteTag" style="display:none;"></div>
   </div>
@@ -1054,6 +1109,18 @@ let scaleRoot = null;
 let scaleLength = 'tetra';
 let scaleAnswer = null;
 let lastScaleOffsets = [];
+
+// ---------- Imitation exercise ----------
+let imitateSubMode = 'note';
+let imitateTargetOffsets = [];
+let imitateTargetIndex = 0;
+let imitateRoundActive = false;
+let imitateAnswered = false;
+let imitateMicRunning = false;
+let imitateMatchSince = 0;
+let imitateMismatchSince = 0;
+let imitateAdvanceTimer = null;
+let imitateRoundToken = 0;
 
 const RANGE_MIN = -24; // C2
 const RANGE_MAX = 12;  // C5
@@ -1705,110 +1772,91 @@ let tunerFreqHistory = [];
 let tunerSmoothedFreq = -1;
 
 function autoCorrelatePitch(buf, sampleRate){
-  const SIZE = buf.length;
+  // Fast, voice-focused normalized autocorrelation. We decimate by 2 so the
+  // detector is considerably lighter on iPhone while retaining enough
+  // resolution for singing fundamentals down to about 65 Hz.
+  const step = 2;
+  const N = Math.floor(buf.length / step);
+  if(N < 1024) return -1;
 
-  // Remove DC offset and calculate RMS in one pass.
   let mean = 0;
-  for(let i = 0; i < SIZE; i++) mean += buf[i];
-  mean /= SIZE;
+  for(let i=0;i<N;i++) mean += buf[i*step];
+  mean /= N;
 
-  let rms = 0;
-  for(let i = 0; i < SIZE; i++){
-    const v = buf[i] - mean;
-    rms += v * v;
-    buf[i] = v;
+  let rms2 = 0;
+  for(let i=0;i<N;i++){
+    const v=buf[i*step]-mean;
+    buf[i*step]=v;
+    rms2 += v*v;
   }
-  rms = Math.sqrt(rms / SIZE);
+  const rms=Math.sqrt(rms2/N);
+  if(rms < 0.0012) return -1;
 
-  // Much more sensitive than the old 0.01 gate. This matters on an iPhone
-  // when the singer is not speaking directly into the bottom microphone.
-  if(rms < 0.0025) return -1;
+  const sr=sampleRate/step;
+  const minFreq=65, maxFreq=900;
+  const minLag=Math.max(2,Math.floor(sr/maxFreq));
+  const maxLag=Math.min(N-3,Math.ceil(sr/minFreq));
 
-  // Voice-focused search range. Restricting the lag range makes the detector
-  // substantially faster and reduces octave errors.
-  const minFreq = 70;
-  const maxFreq = 900;
-  const minLag = Math.max(2, Math.floor(sampleRate / maxFreq));
-  const maxLag = Math.min(SIZE - 3, Math.ceil(sampleRate / minFreq));
+  let bestLag=-1,bestCorr=0;
+  const localPeaks=[];
+  let prevCorr=-1, prevPrevCorr=-1;
 
-  // Normalized autocorrelation. We look for the FIRST convincing local peak
-  // rather than simply taking the largest peak, which is a common source of
-  // octave-down errors in singing.
-  let bestLag = -1;
-  let bestCorr = 0;
-  let previous = 1;
-
-  for(let lag = minLag; lag <= maxLag; lag++){
-    let sumXY = 0, sumX2 = 0, sumY2 = 0;
-    const n = SIZE - lag;
-
-    for(let i = 0; i < n; i++){
-      const x = buf[i];
-      const y = buf[i + lag];
-      sumXY += x * y;
-      sumX2 += x * x;
-      sumY2 += y * y;
+  // Hann window reduces room-noise/edge influence without changing pitch.
+  const wDen=N-1;
+  for(let lag=minLag;lag<=maxLag;lag++){
+    const count=N-lag;
+    let xy=0,xx=0,yy=0;
+    for(let i=0;i<count;i++){
+      const wx=0.5-0.5*Math.cos((2*Math.PI*i)/wDen);
+      const x=buf[i*step]*wx;
+      const y=buf[(i+lag)*step]*wx;
+      xy+=x*y; xx+=x*x; yy+=y*y;
     }
+    const den=Math.sqrt(xx*yy);
+    const corr=den>1e-12?xy/den:0;
 
-    const denom = Math.sqrt(sumX2 * sumY2);
-    const corr = denom > 1e-12 ? sumXY / denom : 0;
-
-    // A local maximum above this confidence is usually the fundamental.
-    if(corr > 0.45 && corr >= previous && (lag === maxLag || corr >= 0)){
-      let nextSumXY = 0, nextX2 = 0, nextY2 = 0;
-      const n2 = SIZE - (lag + 1);
-      for(let i = 0; i < n2; i++){
-        const x = buf[i], y = buf[i + lag + 1];
-        nextSumXY += x * y;
-        nextX2 += x * x;
-        nextY2 += y * y;
-      }
-      const nextDen = Math.sqrt(nextX2 * nextY2);
-      const nextCorr = nextDen > 1e-12 ? nextSumXY / nextDen : 0;
-
-      if(corr >= nextCorr){
-        bestLag = lag;
-        bestCorr = corr;
-        break;
-      }
+    // A local maximum is a plausible period. Keep a few candidates so a
+    // noisy first harmonic does not automatically become the answer.
+    if(prevCorr>=prevPrevCorr && prevCorr>=corr && prevCorr>0.28){
+      localPeaks.push({lag:lag-1,corr:prevCorr});
     }
-
-    if(corr > bestCorr){
-      bestCorr = corr;
-      bestLag = lag;
-    }
-    previous = corr;
+    prevPrevCorr=prevCorr;
+    prevCorr=corr;
   }
+  if(prevCorr>=prevPrevCorr && prevCorr>0.28) localPeaks.push({lag:maxLag,corr:prevCorr});
+  if(!localPeaks.length) return -1;
 
-  if(bestLag < 0 || bestCorr < 0.40) return -1;
+  // Prefer the strongest convincing peak; if a smaller-lag harmonic is very
+  // close, prefer it to reduce octave-down errors.
+  let strongest=localPeaks[0];
+  for(const p of localPeaks) if(p.corr>strongest.corr) strongest=p;
+  const threshold=Math.max(0.34,strongest.corr-0.045);
+  const convincing=localPeaks.filter(p=>p.corr>=threshold);
+  convincing.sort((x,y)=>x.lag-y.lag);
+  const chosen=convincing[0];
 
-  // Parabolic interpolation for sub-sample precision.
-  const lag = bestLag;
+  if(!chosen || chosen.corr<0.34) return -1;
+
+  // Sub-sample parabolic interpolation using three nearby correlation
+  // measurements. This improves cents accuracy.
   function corrAt(L){
-    if(L < minLag || L > maxLag) return bestCorr;
-    let xy = 0, xx = 0, yy = 0;
-    const n = SIZE - L;
-    for(let i = 0; i < n; i++){
-      const x = buf[i], y = buf[i + L];
-      xy += x * y; xx += x * x; yy += y * y;
+    if(L<minLag || L>maxLag) return chosen.corr;
+    const count=N-L;
+    let xy=0,xx=0,yy=0;
+    for(let i=0;i<count;i++){
+      const wx=0.5-0.5*Math.cos((2*Math.PI*i)/wDen);
+      const x=buf[i*step]*wx, y=buf[(i+L)*step]*wx;
+      xy+=x*y;xx+=x*x;yy+=y*y;
     }
-    const den = Math.sqrt(xx * yy);
-    return den > 1e-12 ? xy / den : 0;
+    const den=Math.sqrt(xx*yy);
+    return den>1e-12?xy/den:0;
   }
-
-  const c1 = corrAt(lag - 1);
-  const c2 = corrAt(lag);
-  const c3 = corrAt(lag + 1);
-  const denom = c1 - 2 * c2 + c3;
-  const shift = Math.abs(denom) > 1e-9
-    ? 0.5 * (c1 - c3) / denom
-    : 0;
-
-  const period = lag + Math.max(-0.5, Math.min(0.5, shift));
-  const freq = sampleRate / period;
-
-  if(!isFinite(freq) || freq < minFreq || freq > maxFreq) return -1;
-  return freq;
+  const c1=corrAt(chosen.lag-1),c2=corrAt(chosen.lag),c3=corrAt(chosen.lag+1);
+  const denom=c1-2*c2+c3;
+  const shift=Math.abs(denom)>1e-9?0.5*(c1-c3)/denom:0;
+  const period=(chosen.lag+Math.max(-0.5,Math.min(0.5,shift)))*step;
+  const freq=sampleRate/period;
+  return isFinite(freq)&&freq>=65&&freq<=900?freq:-1;
 }
 
 function freqToNoteInfo(freq){
@@ -1839,7 +1887,7 @@ function smoothTunerFrequency(freq){
   if(freq <= 0) return -1;
 
   tunerFreqHistory.push(freq);
-  if(tunerFreqHistory.length > 5) tunerFreqHistory.shift();
+  if(tunerFreqHistory.length > 7) tunerFreqHistory.shift();
 
   // Median rejects a single octave/period glitch before the EMA.
   const sorted = tunerFreqHistory.slice().sort((a,b) => a-b);
@@ -1849,7 +1897,7 @@ function smoothTunerFrequency(freq){
     tunerSmoothedFreq = median;
   } else {
     // Faster response when starting/changing notes, gentle smoothing while held.
-    const alpha = Math.abs(1200 * Math.log2(median / tunerSmoothedFreq)) > 100 ? 0.45 : 0.22;
+    const alpha = Math.abs(1200 * Math.log2(median / tunerSmoothedFreq)) > 70 ? 0.40 : 0.28;
     tunerSmoothedFreq += alpha * (median - tunerSmoothedFreq);
   }
   return tunerSmoothedFreq;
@@ -1887,6 +1935,7 @@ function tunerLoop(){
 
       if(freq > 0){
         const stableFreq = smoothTunerFrequency(freq);
+        if(imitateMicRunning && currentMode === 'imitate') imitationHandlePitch(stableFreq);
         const info = freqToNoteInfo(stableFreq);
         document.getElementById('tunerNote').textContent = info.name;
         document.getElementById('tunerFreq').textContent = stableFreq.toFixed(1) + ' Hz  —  ' +
@@ -1990,6 +2039,8 @@ async function startTuner(){
 
 function stopTuner(){
   tunerRunning = false;
+  imitateMicRunning = false;
+  imitateRoundActive = false;
   if(tunerRafId) cancelAnimationFrame(tunerRafId);
   tunerRafId = null;
 
@@ -2348,6 +2399,154 @@ async function replay(){
   playOffset(secondOffset, dur + gap + 0.05, dur);
 }
 
+
+// ---------- Imitation exercise (تکرار نت / ملودی) ----------
+function fillImitationRangeSelects(){
+  const minEl=document.getElementById('imitateRangeMin'), maxEl=document.getElementById('imitateRangeMax');
+  if(!minEl || !maxEl || minEl.options.length) return;
+  for(let o=RANGE_MIN;o<=RANGE_MAX;o++){
+    const midi=60+o, pc=((midi%12)+12)%12, oct=Math.floor(midi/12)-1;
+    minEl.add(new Option(NOTE_NAMES[pc]+oct,String(o)));
+    maxEl.add(new Option(NOTE_NAMES[pc]+oct,String(o)));
+  }
+  minEl.value='-12'; maxEl.value='7';
+}
+function getImitationSettings(){
+  const subMode=document.querySelector('#imitateSubModeGroup .pill.active').dataset.val;
+  const scaleType=document.querySelector('#imitateScaleGroup .pill.active').dataset.val;
+  const melodyType=document.querySelector('#imitateMelodyTypeGroup .pill.active').dataset.val;
+  const length=parseInt(document.querySelector('#imitateLengthGroup .pill.active').dataset.val,10);
+  let minOffset=parseInt(document.getElementById('imitateRangeMin').value,10);
+  let maxOffset=parseInt(document.getElementById('imitateRangeMax').value,10);
+  if(minOffset>maxOffset)[minOffset,maxOffset]=[maxOffset,minOffset];
+  return {subMode,scaleType,melodyType,length,minOffset,maxOffset};
+}
+function imitationScaleOffsets(scaleType,minOffset,maxOffset){
+  const pattern=SCALE_PATTERNS[scaleType]||SCALE_PATTERNS.major, pcs=new Set(pattern.slice(0,7)), out=[];
+  for(let o=minOffset;o<=maxOffset;o++){if(pcs.has(((o%12)+12)%12))out.push(o);}
+  return out.length?out:Array.from({length:maxOffset-minOffset+1},(_,i)=>minOffset+i);
+}
+function buildImitationTargets(s){
+  const available=imitationScaleOffsets(s.scaleType,s.minOffset,s.maxOffset);
+  if(s.subMode==='note') return [available[Math.floor(Math.random()*available.length)]];
+  const targets=[], maxStep=s.scaleType==='hijaz'?3:2;
+  for(let i=0;i<Math.max(2,s.length);i++){
+    if(i===0){targets.push(available[Math.floor(Math.random()*available.length)]);continue;}
+    let c=s.melodyType==='stepwise'
+      ? available.filter(n=>n!==targets[i-1] && Math.abs(n-targets[i-1])<=maxStep)
+      : available.filter(n=>n!==targets[i-1]);
+    if(!c.length)c=available.filter(n=>n!==targets[i-1]);
+    targets.push(c.length?c[Math.floor(Math.random()*c.length)]:targets[i-1]);
+  }
+  return targets;
+}
+function imitationFreqForOffset(o){return 261.6255653005986*Math.pow(2,o/12);}
+function imitationCentsError(freq,o){return 1200*Math.log2(freq/imitationFreqForOffset(o));}
+function imitationSetStatus(t,c=''){const f=document.getElementById('feedback');f.textContent=t;f.className='feedback'+(c?' '+c:'');}
+function updateImitationProgress(){
+  const e=document.getElementById('imitateProgress');
+  e.textContent=imitateRoundActive
+    ? (imitateSubMode==='note'?'نت را بخوان…':'نت '+Math.min(imitateTargetIndex+1,imitateTargetOffsets.length)+' از '+imitateTargetOffsets.length)
+    : '';
+}
+function playImitationTargets(){
+  if(!samplerReady||!audioCtx||!imitateTargetOffsets.length)return;
+  const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
+  imitateTargetOffsets.forEach((o,i)=>{const d=.08+i*(dur+gap);playOffset(o,d,dur);highlightPerfKey(o,d,dur);});
+}
+async function startImitationMic(){
+  if(imitateMicRunning)return true;
+  if(!navigator.mediaDevices?.getUserMedia){imitationSetStatus('این مرورگر دسترسی به میکروفون را پشتیبانی نمی‌کند.','wrong');return false;}
+  if(!(await ensureAudio()))return false;
+  try{
+    tunerStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true,channelCount:1}});
+    tunerSource=audioCtx.createMediaStreamSource(tunerStream);
+    tunerFilter=audioCtx.createBiquadFilter();tunerFilter.type='highpass';tunerFilter.frequency.value=55;tunerFilter.Q.value=.7;
+    const lp=audioCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;lp.Q.value=.5;
+    tunerAnalyser=audioCtx.createAnalyser();tunerAnalyser.fftSize=4096;tunerAnalyser.smoothingTimeConstant=0;
+    tunerBuffer=new Float32Array(tunerAnalyser.fftSize);tunerUsesByteFallback=false;tunerByteBuffer=null;
+    tunerSource.connect(tunerFilter);tunerFilter.connect(lp);lp.connect(tunerAnalyser);
+    imitateMicRunning=true;tunerRunning=true;tunerFreqHistory=[];tunerSmoothedFreq=-1;tunerFrameCounter=0;tunerLoop();return true;
+  }catch(e){
+    console.error('Imitation microphone failed',e);
+    if(tunerStream)tunerStream.getTracks().forEach(t=>t.stop());
+    tunerStream=null;tunerSource=null;tunerFilter=null;
+    imitationSetStatus('دسترسی به میکروفون ممکن نشد. اجازه‌ی میکروفون را فعال کن.','wrong');return false;
+  }
+}
+function finishImitationRound(success){
+  if(!imitateRoundActive||imitateAnswered)return;
+  imitateRoundActive=false;imitateAnswered=true;
+  if(success){
+    total++;correct++;updateScore();imitationSetStatus('درسته! 🎉','correct');
+    document.getElementById('stageLabel').textContent='تأیید صوتی…';
+    document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('imitateSkipBtn').disabled=true;
+    const token=++imitateRoundToken,dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
+    playImitationTargets();
+    setTimeout(()=>{if(token===imitateRoundToken&&currentMode==='imitate')newImitationRound();},Math.max(900,(imitateTargetOffsets.length*(dur+gap)+.45)*1000));
+  }else{
+    total++;updateScore();imitationSetStatus('این بار دقیق نبود؛ دوباره تلاش کن یا رد شو.','wrong');
+    document.getElementById('stageLabel').textContent='دوباره بخون یا رد شو';
+    document.getElementById('imitateReplayBtn').disabled=false;document.getElementById('imitateSkipBtn').disabled=false;
+  }
+}
+function imitationHandlePitch(freq){
+  if(!imitateRoundActive||!imitateTargetOffsets.length||freq<=0)return;
+  const now=performance.now(),abs=Math.abs(imitationCentsError(freq,imitateTargetOffsets[imitateTargetIndex]));
+  if(abs<=50){
+    imitateMismatchSince=0;if(!imitateMatchSince)imitateMatchSince=now;
+    if(now-imitateMatchSince>=(imitateSubMode==='note'?280:230)){
+      imitateMatchSince=0;
+      if(imitateSubMode==='note')finishImitationRound(true);
+      else if(++imitateTargetIndex>=imitateTargetOffsets.length)finishImitationRound(true);
+      else{imitationSetStatus('درسته — نت بعدی…','correct');updateImitationProgress();}
+    }
+  }else{
+    imitateMatchSince=0;
+    if(abs>80){if(!imitateMismatchSince)imitateMismatchSince=now;if(now-imitateMismatchSince>=550)finishImitationRound(false);}
+    else imitateMismatchSince=0;
+  }
+}
+async function newImitationRound(){
+  if(currentMode!=='imitate')return;
+  if(!(await ensureAudio()))return;
+  if(!samplerReady&&samplerInitPromise)await samplerInitPromise;
+  if(!samplerReady)return;
+  ++imitateRoundToken;clearTimeout(imitateAdvanceTimer);
+  imitateAnswered=false;imitateRoundActive=false;imitateTargetIndex=0;
+  const s=getImitationSettings();imitateSubMode=s.subMode;imitateTargetOffsets=buildImitationTargets(s);
+  document.getElementById('feedback').textContent='';document.getElementById('feedback').className='feedback';
+  document.getElementById('stageLabel').textContent='گوش بده… بعد همون را بخون';
+  document.getElementById('playBtn').disabled=true;document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('imitateSkipBtn').disabled=false;
+  updateImitationProgress();
+  if(!(await startImitationMic()))return;
+  playImitationTargets();
+  const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
+  imitateAdvanceTimer=setTimeout(()=>{
+    if(currentMode!=='imitate'||imitateAnswered)return;
+    imitateRoundActive=true;imitateMatchSince=0;imitateMismatchSince=0;
+    document.getElementById('stageLabel').textContent='حالا تکرار کن';document.getElementById('imitateReplayBtn').disabled=false;updateImitationProgress();
+  },(imitateTargetOffsets.length*(dur+gap)+.18)*1000);
+}
+async function replayImitation(){
+  if(currentMode!=='imitate'||!imitateTargetOffsets.length)return;
+  if(!(await ensureAudio()))return;
+  clearTimeout(imitateAdvanceTimer);imitateRoundActive=false;imitateAnswered=false;imitateMatchSince=0;imitateMismatchSince=0;
+  document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('stageLabel').textContent='دوباره پخش می‌شه…';playImitationTargets();
+  const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
+  imitateAdvanceTimer=setTimeout(()=>{
+    if(currentMode!=='imitate'||imitateAnswered)return;
+    imitateRoundActive=true;document.getElementById('stageLabel').textContent='حالا تکرار کن';document.getElementById('imitateReplayBtn').disabled=false;updateImitationProgress();
+  },(imitateTargetOffsets.length*(dur+gap)+.18)*1000);
+}
+function skipImitation(){
+  if(currentMode!=='imitate')return;
+  ++imitateRoundToken;clearTimeout(imitateAdvanceTimer);imitateRoundActive=false;imitateAnswered=true;
+  imitationSetStatus('رد شد.','');document.getElementById('stageLabel').textContent='می‌ریم سراغ بعدی…';
+  document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('imitateSkipBtn').disabled=true;
+  setTimeout(()=>{if(currentMode==='imitate')newImitationRound();},350);
+}
+
 function answer(choice){
   if(answered) return;
 
@@ -2643,6 +2842,10 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('btn2').disabled = true;
   const wrap = document.getElementById('scaleChoicesWrap');
   Array.from(wrap.children).forEach(b => { b.disabled = true; b.className = 'scale-choice-btn'; });
+  ++imitateRoundToken;
+  clearTimeout(imitateAdvanceTimer);
+  imitateRoundActive = false;
+  imitateAnswered = false;
   document.getElementById('sizeDirWrap').style.display = 'none';
   document.getElementById('sizeDirUp').disabled = true;
   document.getElementById('sizeDirDown').disabled = true;
@@ -2742,6 +2945,30 @@ document.getElementById('gravityRepeatPlus').addEventListener('click', () => {
   el.textContent = v;
 });
 
+
+fillImitationRangeSelects();
+document.querySelectorAll('#imitateSubModeGroup .pill, #imitateScaleGroup .pill, #imitateMelodyTypeGroup .pill, #imitateLengthGroup .pill').forEach(pill=>{
+  pill.addEventListener('click',()=>{
+    const group=pill.parentElement;
+    group.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    pill.classList.add('active');
+    if(group.id==='imitateSubModeGroup'){
+      document.getElementById('imitateMelodyOnlySettings').style.display=pill.dataset.val==='melody'?'block':'none';
+    }
+  });
+});
+['imitateRangeMin','imitateRangeMax'].forEach(id=>{
+  document.getElementById(id).addEventListener('change',()=>{
+    const a=parseInt(document.getElementById('imitateRangeMin').value,10),b=parseInt(document.getElementById('imitateRangeMax').value,10);
+    if(a>b){
+      if(id==='imitateRangeMin')document.getElementById('imitateRangeMax').value=String(a);
+      else document.getElementById('imitateRangeMin').value=String(b);
+    }
+  });
+});
+document.getElementById('imitateReplayBtn').addEventListener('click',replayImitation);
+document.getElementById('imitateSkipBtn').addEventListener('click',skipImitation);
+
 document.querySelectorAll('#modeGroup .pill').forEach(pill => {
   pill.addEventListener('click', () => {
     document.querySelectorAll('#modeGroup .pill').forEach(p => p.classList.remove('active'));
@@ -2755,6 +2982,7 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     const recogCard = document.getElementById('recogCard');
     const gravityCard = document.getElementById('gravityCard');
     const tunerCard = document.getElementById('tunerCard');
+    const imitateCard = document.getElementById('imitateCard');
     const stageCard = document.getElementById('stageCard');
     const mainTitle = document.getElementById('mainTitle');
     const introText = document.getElementById('introText');
@@ -2774,6 +3002,7 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     recogCard.classList.add('disabled');
     gravityCard.classList.add('disabled');
     tunerCard.classList.add('disabled');
+    imitateCard.classList.add('disabled');
     stageCard.style.display = 'block';
     choicesWrap.style.display = 'none';
     scaleChoicesWrap.style.display = 'none';
@@ -2843,6 +3072,18 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
       mainTitle.textContent = 'جاذبه';
       introText.textContent = 'یه الگوی پله‌ای می‌شنوی که همیشه به تونیک (دو) برمی‌گرده — Do، Do Re Do، Do Re Mi Re Do، و همین‌طور بالاتر. این بخش هم فقط برای شنیدنه.';
       showPerfKeyboard(true);
+     } else if(currentMode === 'imitate'){
+       imitateCard.classList.remove('disabled');
+       mainTitle.textContent = 'تکرار نت / ملودی';
+       introText.textContent = 'نت یا ملودی با صدای واقعی پیانو پخش می‌شود؛ بعد صدای تو مستقیماً از میکروفون تحلیل می‌شود.';
+       scoreCard.style.display = 'block';
+       resetBtnEl.style.display = 'block';
+       showPerfKeyboard(true);
+       document.getElementById('imitateActions').style.display = 'flex';
+       document.getElementById('imitateProgress').style.display = 'block';
+       document.getElementById('imitateMelodyOnlySettings').style.display =
+         document.querySelector('#imitateSubModeGroup .pill.active').dataset.val === 'melody' ? 'block' : 'none';
+       setTimeout(()=>{ if(currentMode === 'imitate') newImitationRound(); },80);
     } else if(currentMode === 'tuner'){
       tunerCard.classList.remove('disabled');
       stageCard.style.display = 'none';
