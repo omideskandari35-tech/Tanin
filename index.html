@@ -180,7 +180,7 @@
     font-size:13px;
     min-width:100px;
   }
-  #intervalCard.disabled, #scaleCard.disabled, #playCard.disabled, #notePlayerCard.disabled, #recogCard.disabled, #gravityCard.disabled, #tunerCard.disabled{
+  #intervalCard.disabled, #scaleCard.disabled, #playCard.disabled, #notePlayerCard.disabled, #recogCard.disabled, #gravityCard.disabled, #imitateCard.disabled, #tunerCard.disabled{
     opacity:0;
     pointer-events:none;
     max-height:0;
@@ -582,6 +582,20 @@
   .imitate-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .imitate-range label{display:flex;flex-direction:column;gap:6px;font-size:11.5px;color:var(--ink-faint);font-weight:600;}
   .imitate-actions{display:flex;gap:10px;justify-content:center;margin-top:16px;}
+
+  .imitate-live{
+    display:none; margin-top:14px; padding:12px 14px; border:1.5px solid var(--line);
+    border-radius:14px; background:var(--card-soft); align-items:center; gap:10px;
+  }
+  .imitate-live.show{display:flex;}
+  .imitate-mic{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+    background:var(--card); border:1.5px solid var(--line); font-size:18px; flex:0 0 auto;}
+  .imitate-mic.listening{animation:micPulse 1.15s ease-in-out infinite; border-color:var(--brass);}
+  @keyframes micPulse{0%,100%{transform:scale(1);opacity:.65}50%{transform:scale(1.10);opacity:1;box-shadow:0 0 0 7px rgba(189,138,53,.10)}}
+  .imitate-live-text{min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .imitate-live-status{font-size:11.5px;color:var(--ink-faint);font-weight:700;}
+  .imitate-live-note{font-size:20px;font-weight:900;line-height:1.1;color:var(--ink);}
+  .imitate-live-freq{font-size:11px;color:var(--ink-faint);direction:ltr;text-align:right;}
   .secondary-btn{flex:1;padding:12px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--card-soft);color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
   .secondary-btn:disabled{opacity:.45;cursor:default;}
   .secondary-btn.danger{color:var(--down);border-color:var(--down-line);}
@@ -1049,6 +1063,14 @@
     <div class="scale-grid" id="recogChoicesWrap" style="display:none;"></div>
 
     <div class="imitate-progress" id="imitateProgress" style="display:none;"></div>
+    <div class="imitate-live" id="imitateLive">
+      <div class="imitate-mic" id="imitateMicIndicator">🎙️</div>
+      <div class="imitate-live-text">
+        <div class="imitate-live-status" id="imitateLiveStatus">میکروفون خاموش</div>
+        <div class="imitate-live-note" id="imitateLiveNote">–</div>
+        <div class="imitate-live-freq" id="imitateLiveFreq">&nbsp;</div>
+      </div>
+    </div>
     <div class="imitate-actions" id="imitateActions" style="display:none;">
       <button class="secondary-btn" id="imitateReplayBtn" type="button">↻ پخش دوباره</button>
       <button class="secondary-btn danger" id="imitateSkipBtn" type="button">رد شدن</button>
@@ -1942,8 +1964,26 @@ function tunerLoop(){
           (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت';
         document.getElementById('tunerStatus').textContent = 'در حال شنیدن…';
         updateTunerNeedle(info.cents);
+        if(imitateMicRunning && currentMode === 'imitate') {
+          const live = document.getElementById('imitateLive');
+          const mic = document.getElementById('imitateMicIndicator');
+          if(live) live.classList.add('show');
+          if(mic) mic.classList.add('listening');
+          const ls = document.getElementById('imitateLiveStatus');
+          const ln = document.getElementById('imitateLiveNote');
+          const lf = document.getElementById('imitateLiveFreq');
+          if(ls) ls.textContent = 'در حال گوش دادن…';
+          if(ln) ln.textContent = info.name;
+          if(lf) lf.textContent = stableFreq.toFixed(1) + ' Hz  —  ' + (info.cents >= 0 ? '+' : '') + info.cents.toFixed(0) + ' سنت';
+        }
       } else if(tunerFreqHistory.length === 0){
         resetTunerDisplay();
+        if(imitateMicRunning && currentMode === 'imitate') {
+          const ls=document.getElementById('imitateLiveStatus');
+          const ln=document.getElementById('imitateLiveNote');
+          if(ls) ls.textContent='در حال گوش دادن… صدای خودت را بخوان';
+          if(ln) ln.textContent='–';
+        }
       }
     }
   } catch(e){
@@ -2063,6 +2103,16 @@ function stopTuner(){
 
   document.getElementById('tunerMicBtn').classList.remove('listening');
   document.getElementById('tunerStatus').textContent = 'برای شروع دکمه‌ی میکروفون رو بزن';
+  const live=document.getElementById('imitateLive');
+  const mic=document.getElementById('imitateMicIndicator');
+  if(live) live.classList.remove('show');
+  if(mic) mic.classList.remove('listening');
+  const ls=document.getElementById('imitateLiveStatus');
+  const ln=document.getElementById('imitateLiveNote');
+  const lf=document.getElementById('imitateLiveFreq');
+  if(ls) ls.textContent='میکروفون خاموش';
+  if(ln) ln.textContent='–';
+  if(lf) lf.innerHTML='&nbsp;';
   document.getElementById('tunerNote').textContent = '–';
   document.getElementById('tunerFreq').textContent = '\u00A0';
   const needle = document.getElementById('tunerNeedle');
@@ -2449,10 +2499,14 @@ function updateImitationProgress(){
     ? (imitateSubMode==='note'?'نت را بخوان…':'نت '+Math.min(imitateTargetIndex+1,imitateTargetOffsets.length)+' از '+imitateTargetOffsets.length)
     : '';
 }
-function playImitationTargets(){
-  if(!samplerReady||!audioCtx||!imitateTargetOffsets.length)return;
+async function playImitationTargets(){
+  if(!imitateTargetOffsets.length)return false;
+  if(!(await ensureAudio()))return false;
+  if(!samplerReady&&samplerInitPromise) await samplerInitPromise;
+  if(!samplerReady)return false;
   const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
   imitateTargetOffsets.forEach((o,i)=>{const d=.08+i*(dur+gap);playOffset(o,d,dur);highlightPerfKey(o,d,dur);});
+  return true;
 }
 async function startImitationMic(){
   if(imitateMicRunning)return true;
@@ -2466,7 +2520,16 @@ async function startImitationMic(){
     tunerAnalyser=audioCtx.createAnalyser();tunerAnalyser.fftSize=4096;tunerAnalyser.smoothingTimeConstant=0;
     tunerBuffer=new Float32Array(tunerAnalyser.fftSize);tunerUsesByteFallback=false;tunerByteBuffer=null;
     tunerSource.connect(tunerFilter);tunerFilter.connect(lp);lp.connect(tunerAnalyser);
-    imitateMicRunning=true;tunerRunning=true;tunerFreqHistory=[];tunerSmoothedFreq=-1;tunerFrameCounter=0;tunerLoop();return true;
+    imitateMicRunning=true;tunerRunning=true;tunerFreqHistory=[];tunerSmoothedFreq=-1;tunerFrameCounter=0;
+    const live=document.getElementById('imitateLive');
+    const mic=document.getElementById('imitateMicIndicator');
+    const ls=document.getElementById('imitateLiveStatus');
+    const ln=document.getElementById('imitateLiveNote');
+    if(live) live.classList.add('show');
+    if(mic) mic.classList.add('listening');
+    if(ls) ls.textContent='در حال گوش دادن…';
+    if(ln) ln.textContent='–';
+    tunerLoop();return true;
   }catch(e){
     console.error('Imitation microphone failed',e);
     if(tunerStream)tunerStream.getTracks().forEach(t=>t.stop());
@@ -2520,7 +2583,7 @@ async function newImitationRound(){
   document.getElementById('playBtn').disabled=true;document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('imitateSkipBtn').disabled=false;
   updateImitationProgress();
   if(!(await startImitationMic()))return;
-  playImitationTargets();
+  await playImitationTargets();
   const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
   imitateAdvanceTimer=setTimeout(()=>{
     if(currentMode!=='imitate'||imitateAnswered)return;
@@ -2532,7 +2595,7 @@ async function replayImitation(){
   if(currentMode!=='imitate'||!imitateTargetOffsets.length)return;
   if(!(await ensureAudio()))return;
   clearTimeout(imitateAdvanceTimer);imitateRoundActive=false;imitateAnswered=false;imitateMatchSince=0;imitateMismatchSince=0;
-  document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('stageLabel').textContent='دوباره پخش می‌شه…';playImitationTargets();
+  document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('stageLabel').textContent='دوباره پخش می‌شه…';await playImitationTargets();
   const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
   imitateAdvanceTimer=setTimeout(()=>{
     if(currentMode!=='imitate'||imitateAnswered)return;
@@ -3004,6 +3067,10 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
     tunerCard.classList.add('disabled');
     imitateCard.classList.add('disabled');
     stageCard.style.display = 'block';
+    document.getElementById('playBtn').style.display = 'flex';
+    document.getElementById('imitateActions').style.display = 'none';
+    document.getElementById('imitateProgress').style.display = 'none';
+    document.getElementById('imitateLive').classList.remove('show');
     choicesWrap.style.display = 'none';
     scaleChoicesWrap.style.display = 'none';
     recogChoicesWrap.style.display = 'none';
@@ -3081,6 +3148,7 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
        showPerfKeyboard(true);
        document.getElementById('imitateActions').style.display = 'flex';
        document.getElementById('imitateProgress').style.display = 'block';
+       document.getElementById('playBtn').style.display = 'none';
        document.getElementById('imitateMelodyOnlySettings').style.display =
          document.querySelector('#imitateSubModeGroup .pill.active').dataset.val === 'melody' ? 'block' : 'none';
        setTimeout(()=>{ if(currentMode === 'imitate') newImitationRound(); },80);
