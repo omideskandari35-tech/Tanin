@@ -595,7 +595,10 @@
   .imitate-live-text{min-width:0;display:flex;flex-direction:column;gap:2px;}
   .imitate-live-status{font-size:11.5px;color:var(--ink-faint);font-weight:700;}
   .imitate-live-note{font-size:20px;font-weight:900;line-height:1.1;color:var(--ink);}
-  .imitate-live-freq{font-size:11px;color:var(--ink-faint);direction:ltr;text-align:right;}
+  .imitate-live-freq{font-size:11px;color:var(--ink-faint);direction:ltr;text-align:center;}
+  .imitate-gauge{width:min(280px,90vw);height:128px;margin-top:2px;}
+  .imitate-gauge .tuner-meter{width:100%;height:128px;margin:0 auto;}
+  .imitate-gauge .tuner-needle{height:98px;}
   .secondary-btn{flex:1;padding:12px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--card-soft);color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
   .secondary-btn:disabled{opacity:.45;cursor:default;}
   .secondary-btn.danger{color:var(--down);border-color:var(--down-line);}
@@ -964,6 +967,7 @@
       <button class="pill active" data-val="note">تکرار نت</button>
       <button class="pill" data-val="melody">تکرار ملودی</button>
     </div>
+    <div id="imitateMelodyOnlySettings">
     <p class="sub-title">نوع گام</p>
     <div class="pill-group" id="imitateScaleGroup">
       <button class="pill active" data-val="major">ماژور</button>
@@ -973,7 +977,6 @@
       <button class="pill" data-val="phrygian">فریژین</button>
       <button class="pill" data-val="hijaz">حجاز</button>
     </div>
-    <div id="imitateMelodyOnlySettings">
       <p class="sub-title">نوع ملودی</p>
       <div class="pill-group" id="imitateMelodyTypeGroup">
         <button class="pill active" data-val="stepwise">پلکانی</button>
@@ -1070,6 +1073,7 @@
         <div class="imitate-live-note" id="imitateLiveNote">–</div>
         <div class="imitate-live-freq" id="imitateLiveFreq">&nbsp;</div>
       </div>
+      <div class="imitate-gauge"><div class="tuner-meter"><div class="zero-line"></div><div class="tuner-needle" id="imitateNeedle"></div></div></div>
     </div>
     <div class="imitate-actions" id="imitateActions" style="display:none;">
       <button class="secondary-btn" id="imitateReplayBtn" type="button">↻ پخش دوباره</button>
@@ -1143,6 +1147,7 @@ let imitateMatchSince = 0;
 let imitateMismatchSince = 0;
 let imitateAdvanceTimer = null;
 let imitateRoundToken = 0;
+let lastImitationFirstOffset = null;
 
 const RANGE_MIN = -24; // C2
 const RANGE_MAX = 12;  // C5
@@ -1890,20 +1895,15 @@ function freqToNoteInfo(freq){
   return { name: NOTE_NAMES[idx] + octave, cents };
 }
 
-function updateTunerNeedle(cents){
-  const needle = document.getElementById('tunerNeedle');
-  const clamped = Math.max(-50, Math.min(50, cents));
-  const leftPercent = 50 + (clamped / 50) * 50;
-  needle.style.left = leftPercent + '%';
-  needle.style.right = 'auto';
-  needle.style.transform = 'translateX(-50%)';
-
-  needle.classList.remove('in-tune', 'close', 'off');
-  const absCents = Math.abs(cents);
-  if(absCents <= 8) needle.classList.add('in-tune');
-  else if(absCents <= 25) needle.classList.add('close');
-  else needle.classList.add('off');
+function updateGaugeNeedle(id,cents){
+  const needle=document.getElementById(id); if(!needle)return;
+  const c=Math.max(-50,Math.min(50,Number(cents)||0));
+  needle.style.transform='translateX(-50%) rotate('+((c/50)*58)+'deg)';
+  needle.classList.remove('in-tune','close','off');
+  const a=Math.abs(c);
+  if(a<=8)needle.classList.add('in-tune'); else if(a<=25)needle.classList.add('close'); else needle.classList.add('off');
 }
+function updateTunerNeedle(cents){updateGaugeNeedle('tunerNeedle',cents);updateGaugeNeedle('imitateNeedle',cents);}
 
 function smoothTunerFrequency(freq){
   if(freq <= 0) return -1;
@@ -1932,7 +1932,7 @@ function resetTunerDisplay(){
   const needle = document.getElementById('tunerNeedle');
   needle.style.left = '50%';
   needle.style.right = 'auto';
-  needle.style.transform = 'translateX(-50%)';
+  needle.style.transform = 'translateX(-50%) rotate(0deg)';
   needle.classList.remove('in-tune', 'close', 'off');
 }
 
@@ -2118,7 +2118,7 @@ function stopTuner(){
   const needle = document.getElementById('tunerNeedle');
   needle.style.left = '50%';
   needle.style.right = 'auto';
-  needle.style.transform = 'translateX(-50%)';
+  needle.style.transform = 'translateX(-50%) rotate(0deg)';
   needle.classList.remove('in-tune', 'close', 'off');
 }
 
@@ -2478,7 +2478,7 @@ function imitationScaleOffsets(scaleType,minOffset,maxOffset){
 }
 function buildImitationTargets(s){
   const available=imitationScaleOffsets(s.scaleType,s.minOffset,s.maxOffset);
-  if(s.subMode==='note') return [available[Math.floor(Math.random()*available.length)]];
+  if(s.subMode==='note'){if(available.length===1)return [available[0]];let n;do{n=available[Math.floor(Math.random()*available.length)];}while(n===lastImitationFirstOffset);return [n];}
   const targets=[], maxStep=s.scaleType==='hijaz'?3:2;
   for(let i=0;i<Math.max(2,s.length);i++){
     if(i===0){targets.push(available[Math.floor(Math.random()*available.length)]);continue;}
@@ -2541,35 +2541,22 @@ function finishImitationRound(success){
   if(!imitateRoundActive||imitateAnswered)return;
   imitateRoundActive=false;imitateAnswered=true;
   if(success){
-    total++;correct++;updateScore();imitationSetStatus('درسته! 🎉','correct');
+    total++;correct++;updateScore();imitationSetStatus('✓ درست','correct');
     document.getElementById('stageLabel').textContent='تأیید صوتی…';
     document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('imitateSkipBtn').disabled=true;
     const token=++imitateRoundToken,dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
     playImitationTargets();
     setTimeout(()=>{if(token===imitateRoundToken&&currentMode==='imitate')newImitationRound();},Math.max(900,(imitateTargetOffsets.length*(dur+gap)+.45)*1000));
   }else{
-    total++;updateScore();imitationSetStatus('این بار دقیق نبود؛ دوباره تلاش کن یا رد شو.','wrong');
+    imitationSetStatus('این بار دقیق نبود؛ دوباره تلاش کن یا رد شو.','wrong');
     document.getElementById('stageLabel').textContent='دوباره بخون یا رد شو';
     document.getElementById('imitateReplayBtn').disabled=false;document.getElementById('imitateSkipBtn').disabled=false;
   }
 }
-function imitationHandlePitch(freq){
-  if(!imitateRoundActive||!imitateTargetOffsets.length||freq<=0)return;
-  const now=performance.now(),abs=Math.abs(imitationCentsError(freq,imitateTargetOffsets[imitateTargetIndex]));
-  if(abs<=50){
-    imitateMismatchSince=0;if(!imitateMatchSince)imitateMatchSince=now;
-    if(now-imitateMatchSince>=(imitateSubMode==='note'?280:230)){
-      imitateMatchSince=0;
-      if(imitateSubMode==='note')finishImitationRound(true);
-      else if(++imitateTargetIndex>=imitateTargetOffsets.length)finishImitationRound(true);
-      else{imitationSetStatus('درسته — نت بعدی…','correct');updateImitationProgress();}
-    }
-  }else{
-    imitateMatchSince=0;
-    if(abs>80){if(!imitateMismatchSince)imitateMismatchSince=now;if(now-imitateMismatchSince>=550)finishImitationRound(false);}
-    else imitateMismatchSince=0;
-  }
-}
+function imitationPitchState(freq,targetOffset){const targetMidi=60+targetOffset,midi=69+12*Math.log2(freq/440),nearest=Math.round(midi),cents=(midi-nearest)*100,diff=nearest-targetMidi,exact=Math.abs(imitationCentsError(freq,targetOffset))<=50,octaveWrong=!exact&&diff!==0&&diff%12===0;return{exact,octaveWrong,cents};}
+function clearUserKeyStates(){document.querySelectorAll('#perfKeyboard .note-key').forEach(k=>k.classList.remove('user-correct','user-octave'));}
+function updateImitationUserVisual(freq){if(!imitateTargetOffsets.length||freq<=0)return;const state=imitationPitchState(freq,imitateTargetOffsets[imitateTargetIndex]);clearUserKeyStates();const midi=Math.round(69+12*Math.log2(freq/440)),pc=((midi%12)+12)%12,key=document.querySelector('#perfKeyboard [data-pc="'+pc+'"]');if(key){if(state.exact)key.classList.add('user-correct');else if(state.octaveWrong)key.classList.add('user-octave');}updateTunerNeedle(state.cents);}
+function imitationHandlePitch(freq){if(!imitateRoundActive||!imitateTargetOffsets.length||freq<=0)return;updateImitationUserVisual(freq);const now=performance.now(),abs=Math.abs(imitationCentsError(freq,imitateTargetOffsets[imitateTargetIndex]));if(abs<=50){imitateMismatchSince=0;if(!imitateMatchSince)imitateMatchSince=now;const holdMs=imitateSubMode==='note'?560:460;if(now-imitateMatchSince>=holdMs){if(imitateSubMode==='note')finishImitationRound(true);else{imitateMatchSince=0;if(++imitateTargetIndex>=imitateTargetOffsets.length)finishImitationRound(true);else{clearUserKeyStates();updateTunerNeedle(0);imitationSetStatus('درسته — نت بعدی…','correct');updateImitationProgress();}}}}else{imitateMatchSince=0;if(abs>90){if(!imitateMismatchSince)imitateMismatchSince=now;if(now-imitateMismatchSince>=650)finishImitationRound(false);}else imitateMismatchSince=0;}}
 async function newImitationRound(){
   if(currentMode!=='imitate')return;
   if(!(await ensureAudio()))return;
@@ -2578,6 +2565,7 @@ async function newImitationRound(){
   ++imitateRoundToken;clearTimeout(imitateAdvanceTimer);
   imitateAnswered=false;imitateRoundActive=false;imitateTargetIndex=0;
   const s=getImitationSettings();imitateSubMode=s.subMode;imitateTargetOffsets=buildImitationTargets(s);
+   lastImitationFirstOffset=imitateTargetOffsets[0]??lastImitationFirstOffset;
   document.getElementById('feedback').textContent='';document.getElementById('feedback').className='feedback';
   document.getElementById('stageLabel').textContent='گوش بده… بعد همون را بخون';
   document.getElementById('playBtn').disabled=true;document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('imitateSkipBtn').disabled=false;
@@ -2588,18 +2576,18 @@ async function newImitationRound(){
   imitateAdvanceTimer=setTimeout(()=>{
     if(currentMode!=='imitate'||imitateAnswered)return;
     imitateRoundActive=true;imitateMatchSince=0;imitateMismatchSince=0;
-    document.getElementById('stageLabel').textContent='حالا تکرار کن';document.getElementById('imitateReplayBtn').disabled=false;updateImitationProgress();
+    document.getElementById('stageLabel').textContent='حالا تکرار کن';document.getElementById('playBtn').disabled=false;document.getElementById('imitateReplayBtn').disabled=false;updateImitationProgress();
   },(imitateTargetOffsets.length*(dur+gap)+.18)*1000);
 }
 async function replayImitation(){
   if(currentMode!=='imitate'||!imitateTargetOffsets.length)return;
   if(!(await ensureAudio()))return;
   clearTimeout(imitateAdvanceTimer);imitateRoundActive=false;imitateAnswered=false;imitateMatchSince=0;imitateMismatchSince=0;
-  document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('stageLabel').textContent='دوباره پخش می‌شه…';await playImitationTargets();
+  document.getElementById('imitateReplayBtn').disabled=true;document.getElementById('playBtn').disabled=true;document.getElementById('stageLabel').textContent='دوباره پخش می‌شه…';await playImitationTargets();
   const dur=imitateSubMode==='note'?1.15:.82,gap=imitateSubMode==='note'?.12:.13;
   imitateAdvanceTimer=setTimeout(()=>{
     if(currentMode!=='imitate'||imitateAnswered)return;
-    imitateRoundActive=true;document.getElementById('stageLabel').textContent='حالا تکرار کن';document.getElementById('imitateReplayBtn').disabled=false;updateImitationProgress();
+    imitateRoundActive=true;document.getElementById('stageLabel').textContent='حالا تکرار کن';document.getElementById('playBtn').disabled=false;document.getElementById('imitateReplayBtn').disabled=false;updateImitationProgress();
   },(imitateTargetOffsets.length*(dur+gap)+.18)*1000);
 }
 function skipImitation(){
@@ -2858,6 +2846,7 @@ document.getElementById('playBtn').addEventListener('click', () => {
     playGravityPerformance();
     return;
   }
+  if(currentMode === 'imitate'){ replayImitation(); return; }
   if(currentMode === 'recog'){
     if(!answered && recogAnswerValue !== null){
       replayRecog();
@@ -3148,7 +3137,7 @@ document.querySelectorAll('#modeGroup .pill').forEach(pill => {
        showPerfKeyboard(true);
        document.getElementById('imitateActions').style.display = 'flex';
        document.getElementById('imitateProgress').style.display = 'block';
-       document.getElementById('playBtn').style.display = 'none';
+       document.getElementById('playBtn').style.display = 'flex';
        document.getElementById('imitateMelodyOnlySettings').style.display =
          document.querySelector('#imitateSubModeGroup .pill.active').dataset.val === 'melody' ? 'block' : 'none';
        setTimeout(()=>{ if(currentMode === 'imitate') newImitationRound(); },80);
