@@ -540,31 +540,38 @@
     border-radius:7px;
     margin:24px auto 10px;
     max-width:320px;
-    overflow:visible;
+    overflow:hidden;
     box-shadow:inset 0 1px 3px rgba(42,29,18,.12);
   }
   .tuner-meter .zero-line{
     position:absolute;
-    right:50%;
-    top:-5px;
-    bottom:-5px;
+    left:50%;
+    top:0;
+    bottom:0;
     width:2px;
+    transform:translateX(-1px);
     background:var(--line);
+    z-index:3;
+    opacity:.85;
   }
-  .tuner-needle{
+  .tuner-fill{
     position:absolute;
-    top:-7px;
-    width:8px;
-    height:28px;
-    border-radius:4px;
-    background:var(--line);
-    transform:translateX(50%);
-    right:50%;
-    transition:right .08s linear, background .18s ease, box-shadow .18s ease;
+    top:0;
+    height:100%;
+    width:0;
+    transition:width .08s linear, opacity .12s ease;
+    z-index:1;
   }
-  .tuner-needle.in-tune{ background:var(--up); box-shadow:0 0 10px rgba(63,115,80,.5); }
-  .tuner-needle.close{ background:var(--brass); box-shadow:0 0 8px rgba(189,138,53,.4); }
-  .tuner-needle.off{ background:var(--down); }
+  .tuner-fill.negative{
+    right:50%;
+    background:var(--down);
+    border-radius:7px 0 0 7px;
+  }
+  .tuner-fill.positive{
+    left:50%;
+    background:var(--up);
+    border-radius:0 7px 7px 0;
+  }
   .tuner-cents-label{
     font-size:11.5px;
     color:var(--ink-faint);
@@ -596,9 +603,8 @@
   .imitate-live-status{font-size:11.5px;color:var(--ink-faint);font-weight:700;}
   .imitate-live-note{font-size:20px;font-weight:900;line-height:1.1;color:var(--ink);}
   .imitate-live-freq{font-size:11px;color:var(--ink-faint);direction:ltr;text-align:center;}
-  .imitate-gauge{width:min(280px,90vw);height:128px;margin-top:2px;}
-  .imitate-gauge .tuner-meter{width:100%;height:128px;margin:0 auto;}
-  .imitate-gauge .tuner-needle{height:98px;}
+  .imitate-gauge{width:min(280px,90vw);margin-top:2px;}
+  .imitate-gauge .tuner-meter{width:100%;margin:0 auto;}
   .secondary-btn{flex:1;padding:12px 10px;border-radius:13px;border:1.5px solid var(--line);background:var(--card-soft);color:var(--ink);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
   .secondary-btn:disabled{opacity:.45;cursor:default;}
   .secondary-btn.danger{color:var(--down);border-color:var(--down-line);}
@@ -1006,9 +1012,10 @@
       <div class="tuner-note" id="tunerNote">–</div>
       <div class="tuner-freq" id="tunerFreq">&nbsp;</div>
 
-      <div class="tuner-meter">
+      <div class="tuner-meter" id="tunerMeter">
+        <div class="tuner-fill negative" id="tunerNegative"></div>
+        <div class="tuner-fill positive" id="tunerPositive"></div>
         <div class="zero-line"></div>
-        <div class="tuner-needle" id="tunerNeedle"></div>
       </div>
       <div class="tuner-cents-label">
         <span>−۵۰ سنت</span>
@@ -1073,7 +1080,7 @@
         <div class="imitate-live-note" id="imitateLiveNote">–</div>
         <div class="imitate-live-freq" id="imitateLiveFreq">&nbsp;</div>
       </div>
-      <div class="imitate-gauge"><div class="tuner-meter"><div class="zero-line"></div><div class="tuner-needle" id="imitateNeedle"></div></div></div>
+      <div class="imitate-gauge"><div class="tuner-meter" id="imitateMeter"><div class="tuner-fill negative" id="imitateNegative"></div><div class="tuner-fill positive" id="imitatePositive"></div><div class="zero-line"></div></div></div>
     </div>
     <div class="imitate-actions" id="imitateActions" style="display:none;">
       <button class="secondary-btn" id="imitateReplayBtn" type="button">↻ پخش دوباره</button>
@@ -1895,15 +1902,27 @@ function freqToNoteInfo(freq){
   return { name: NOTE_NAMES[idx] + octave, cents };
 }
 
-function updateGaugeNeedle(id,cents){
-  const needle=document.getElementById(id); if(!needle)return;
+function updateTunerBand(prefix,cents){
+  const neg=document.getElementById(prefix+'Negative');
+  const pos=document.getElementById(prefix+'Positive');
+  if(!neg||!pos)return;
   const c=Math.max(-50,Math.min(50,Number(cents)||0));
-  needle.style.transform='translateX(-50%) rotate('+((c/50)*58)+'deg)';
-  needle.classList.remove('in-tune','close','off');
-  const a=Math.abs(c);
-  if(a<=8)needle.classList.add('in-tune'); else if(a<=25)needle.classList.add('close'); else needle.classList.add('off');
+  const width=(Math.abs(c)/50)*50;
+  if(c<0){
+    neg.style.width=width+'%';
+    pos.style.width='0%';
+  }else if(c>0){
+    neg.style.width='0%';
+    pos.style.width=width+'%';
+  }else{
+    neg.style.width='0%';
+    pos.style.width='0%';
+  }
 }
-function updateTunerNeedle(cents){updateGaugeNeedle('tunerNeedle',cents);updateGaugeNeedle('imitateNeedle',cents);}
+function updateTunerNeedle(cents){
+  updateTunerBand('tuner',cents);
+  updateTunerBand('imitate',cents);
+}
 
 function smoothTunerFrequency(freq){
   if(freq <= 0) return -1;
@@ -1929,11 +1948,7 @@ function resetTunerDisplay(){
   document.getElementById('tunerNote').textContent = '–';
   document.getElementById('tunerFreq').textContent = '\u00A0';
   document.getElementById('tunerStatus').textContent = 'در حال شنیدن… (بخون تا نت رو نشون بدم)';
-  const needle = document.getElementById('tunerNeedle');
-  needle.style.left = '50%';
-  needle.style.right = 'auto';
-  needle.style.transform = 'translateX(-50%) rotate(0deg)';
-  needle.classList.remove('in-tune', 'close', 'off');
+  updateTunerNeedle(0);
 }
 
 function tunerLoop(){
@@ -2115,11 +2130,7 @@ function stopTuner(){
   if(lf) lf.innerHTML='&nbsp;';
   document.getElementById('tunerNote').textContent = '–';
   document.getElementById('tunerFreq').textContent = '\u00A0';
-  const needle = document.getElementById('tunerNeedle');
-  needle.style.left = '50%';
-  needle.style.right = 'auto';
-  needle.style.transform = 'translateX(-50%) rotate(0deg)';
-  needle.classList.remove('in-tune', 'close', 'off');
+  updateTunerNeedle(0);
 }
 
 // ---------- Recognition mode (تشخیص): plays a reference scale/tetrachord,
@@ -2553,9 +2564,9 @@ function finishImitationRound(success){
     document.getElementById('imitateReplayBtn').disabled=false;document.getElementById('imitateSkipBtn').disabled=false;
   }
 }
-function imitationPitchState(freq,targetOffset){const targetMidi=60+targetOffset,midi=69+12*Math.log2(freq/440),nearest=Math.round(midi),cents=(midi-nearest)*100,diff=nearest-targetMidi,exact=Math.abs(imitationCentsError(freq,targetOffset))<=50,octaveWrong=!exact&&diff!==0&&diff%12===0;return{exact,octaveWrong,cents};}
-function clearUserKeyStates(){document.querySelectorAll('#perfKeyboard .note-key').forEach(k=>k.classList.remove('user-correct','user-octave'));}
-function updateImitationUserVisual(freq){if(!imitateTargetOffsets.length||freq<=0)return;const state=imitationPitchState(freq,imitateTargetOffsets[imitateTargetIndex]);clearUserKeyStates();const midi=Math.round(69+12*Math.log2(freq/440)),pc=((midi%12)+12)%12,key=document.querySelector('#perfKeyboard [data-pc="'+pc+'"]');if(key){if(state.exact)key.classList.add('user-correct');else if(state.octaveWrong)key.classList.add('user-octave');}updateTunerNeedle(state.cents);}
+function imitationPitchState(freq,targetOffset){const midi=69+12*Math.log2(freq/440),nearest=Math.round(midi),cents=(midi-nearest)*100,exact=Math.abs(imitationCentsError(freq,targetOffset))<=50;return{exact,cents};}
+function clearUserKeyStates(){document.querySelectorAll('#perfKeyboard .note-key').forEach(k=>k.classList.remove('user-correct'));}
+function updateImitationUserVisual(freq){if(!imitateTargetOffsets.length||freq<=0)return;const state=imitationPitchState(freq,imitateTargetOffsets[imitateTargetIndex]);clearUserKeyStates();const midi=Math.round(69+12*Math.log2(freq/440)),pc=((midi%12)+12)%12,key=document.querySelector('#perfKeyboard [data-pc="'+pc+'"]');if(key&&state.exact)key.classList.add('user-correct');updateTunerNeedle(state.cents);}
 function imitationHandlePitch(freq){if(!imitateRoundActive||!imitateTargetOffsets.length||freq<=0)return;updateImitationUserVisual(freq);const now=performance.now(),abs=Math.abs(imitationCentsError(freq,imitateTargetOffsets[imitateTargetIndex]));if(abs<=50){imitateMismatchSince=0;if(!imitateMatchSince)imitateMatchSince=now;const holdMs=imitateSubMode==='note'?560:460;if(now-imitateMatchSince>=holdMs){if(imitateSubMode==='note')finishImitationRound(true);else{imitateMatchSince=0;if(++imitateTargetIndex>=imitateTargetOffsets.length)finishImitationRound(true);else{clearUserKeyStates();updateTunerNeedle(0);imitationSetStatus('درسته — نت بعدی…','correct');updateImitationProgress();}}}}else{imitateMatchSince=0;if(abs>90){if(!imitateMismatchSince)imitateMismatchSince=now;if(now-imitateMismatchSince>=650)finishImitationRound(false);}else imitateMismatchSince=0;}}
 async function newImitationRound(){
   if(currentMode!=='imitate')return;
